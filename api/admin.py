@@ -3,14 +3,16 @@ from .models import *
 
 
 # Register your models here.
-admin.site.register(Contratista)
-admin.site.register(Camiones)
-admin.site.register(Personal_controladores_frentes)
-admin.site.register(Proyectos)
+admin.site.register(Administrador)
 
-admin.site.register(Punto_origen)
-admin.site.register(Punto_destino)
-admin.site.register(Personal_controladores_frentes_proyectos)
-admin.site.register(Proyectos_contratistas)
+admin.site.register(Proyecto)
+admin.site.register(Despachador)
+admin.site.register(Subcontratista)
+admin.site.register(Camion)
 
-admin.site.register(Proyectos_contratistas_camiones)
+admin.site.register(Origen)
+admin.site.register(Suborigen)
+admin.site.register(Destino)
+admin.site.register(Material)
+
+admin.site.register(Voucher)

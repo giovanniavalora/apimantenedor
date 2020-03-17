@@ -15,7 +15,7 @@ jobs:
       # - run:
       #     name: build y push Docker Images
       #     command:
-      - run: ssh -oStrictHostKeyChecking=no -v ohl@157.245.237.33 "/home/ohl/controlCamionesApi/.circleci/deploy_app.sh"
+      - run: ssh -oStrictHostKeyChecking=no -v ohl@157.245.237.33 "/home/ohl/controlCamionesApi/apimantenedor/.circleci/deploy_app.sh"
       # - run:
       #     name: Deploy app a Digital Ocean
       #     command: ssh -o StrictHostKeyChecking=no root@157.245.237.33 "/bin/bash deploy_app.sh ariv3ra/$IMAGE_NAME:$TAG"

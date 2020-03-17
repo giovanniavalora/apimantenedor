@@ -7,10 +7,18 @@ from api.views import *
 app_name = "config"
 """
 
-
 router = routers.DefaultRouter()
-router.register(r'camiones', views.CamionesViewSet)
-router.register(r'contratistas', views.ContratistasViewSet)
+router.register(r'Administrador', views.AdministradorViewSet)
+router.register(r'Proyecto', views.ProyectoViewSet)
+router.register(r'Despachador', views.DespachadorViewSet)
+router.register(r'Subcontratista', views.SubcontratistaViewSet)
+router.register(r'Camion', views.CamionViewSet)
+router.register(r'Origen', views.OrigenViewSet)
+router.register(r'Suborigen', views.SuborigenViewSet)
+router.register(r'Destino', views.DestinoViewSet)
+router.register(r'Material', views.MaterialViewSet)
+router.register(r'Voucher', views.VoucherViewSet)
+
 
 urlpatterns = [
     path('', include(router.urls)),
