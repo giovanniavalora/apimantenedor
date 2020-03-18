@@ -3,6 +3,9 @@ jobs:
   build:
     docker:
       - image: circleci/python:3.7.6
+    branches:
+      only:
+        - develop
     working_directory: ~/apimantenedor
     environment:
       PYTHONDONTWRITEBYTECODE: 1

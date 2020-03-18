@@ -1,5 +1,6 @@
 cd /home/ohl/controlCamionesApi/apimantenedor
-git pull https://github.com/giovanniavalora/apimantenedor.git
+git checkout develop
+git pull
 cd /home/ohl/controlCamionesApi/
 docker-compose -f docker-compose.prod.yml up -d --build
 #docker-compose -f docker-compose.prod.yml exec web python manage.py migrate --noinput
