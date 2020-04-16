@@ -3,7 +3,7 @@
 ###########
 
 # pull official base image
-FROM python:3.7.6-alpine as builder
+FROM python:3.8.2-alpine as builder
 
 # set work directory
 WORKDIR /usr/src/apimantenedor
@@ -11,6 +11,7 @@ WORKDIR /usr/src/apimantenedor
 # set environment variables
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
+RUN apk add tzdata
 
 # install psycopg2 dependencies
 RUN apk update && apk add postgresql-dev gcc python3-dev musl-dev
@@ -31,7 +32,7 @@ RUN pip wheel --no-cache-dir --no-deps --wheel-dir /usr/src/apimantenedor/wheels
 #########
 
 # pull official base image
-FROM python:3.7.6-alpine
+FROM python:3.8.2-alpine
 
 # create directory for the app user
 RUN mkdir -p /home/apimantenedor
@@ -44,6 +45,7 @@ ENV HOME=/home/apimantenedor
 ENV APP_HOME=/home/apimantenedor/web
 RUN mkdir $APP_HOME
 RUN mkdir $APP_HOME/staticfiles
+RUN mkdir $APP_HOME/mediafiles
 WORKDIR $APP_HOME
 
 # install dependencies
