@@ -62,7 +62,7 @@ class Camion(models.Model):
     numero_ejes = models.CharField(max_length = 5)
     unidad_medida = models.CharField(max_length = 5, choices=UNIDADES)
     color_camion = models.CharField(max_length = 20)
-    # foto_camion = models.FileField(upload_to=get_upload_path_camion, blank=True)
+    foto_camion = models.FileField(upload_to=get_upload_path_camion, blank=True)
     def __str__(self):
         return self.patente_camion+" "+self.marca_camion+" "+self.modelo_camion
     class Meta:
@@ -210,7 +210,8 @@ class User(AbstractBaseUser, PermissionsMixin):
         return self
 
 class Administrador(User, PermissionsMixin):
-    email = models.CharField(max_length=100, blank=True)
+    email = models.CharField(max_length=100)
+    cargo = models.CharField(max_length=100, blank=True)
     
     objects = AdminManager()
     USERNAME_FIELD = 'rut'
@@ -272,10 +273,12 @@ class Voucher(models.Model):
     rut_subcontratista = models.CharField(max_length = 20)
     nombre_conductor_principal = models.CharField(max_length = 50)
     apellido_conductor_principal = models.CharField(max_length = 50)
-    fecha = models.DateTimeField(auto_now_add=True)
-    hora = models.DateTimeField(default=timezone.now)
+    fecha_servidor = models.DateField(auto_now_add=True)
+    hora_servidor = models.TimeField(auto_now_add=True)
+    fecha = models.DateField()
+    hora = models.TimeField()
     patente = models.CharField(max_length = 20)
-    foto_patente = models.FileField(upload_to=get_upload_path_patente, blank=True)
+    foto_patente = models.FileField(upload_to=get_upload_path_patente)
     # foto_patente = models.FileField(upload_to='fotospatentes/%Y/%m/%d/', blank=True)
     volumen = models.CharField(max_length = 20)
     tipo_material = models.CharField(max_length = 50)
