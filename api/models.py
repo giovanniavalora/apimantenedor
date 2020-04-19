@@ -62,7 +62,7 @@ class Camion(models.Model):
     numero_ejes = models.CharField(max_length = 5)
     unidad_medida = models.CharField(max_length = 5, choices=UNIDADES)
     color_camion = models.CharField(max_length = 20)
-    foto_camion = models.FileField(upload_to=get_upload_path_camion, blank=True)
+    # foto_camion = models.FileField(upload_to=get_upload_path_camion, blank=True)
     def __str__(self):
         return self.patente_camion+" "+self.marca_camion+" "+self.modelo_camion
     class Meta:
