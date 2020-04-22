@@ -28,7 +28,7 @@ class Proyecto(models.Model):
 
 class Subcontratista(models.Model):
     proyecto = models.ForeignKey(Proyecto, on_delete=models.CASCADE)
-    rut = models.CharField(max_length = 20)
+    rut = models.CharField(max_length = 20, unique=True)
     razon_social = models.CharField(max_length = 100)
     nombre_subcontratista = models.CharField(max_length = 100)
     nombre_contacto = models.CharField(max_length = 50)
@@ -51,7 +51,7 @@ class Camion(models.Model):
         ('ton','ton')
     ]
     subcontratista = models.ForeignKey(Subcontratista, on_delete=models.CASCADE)
-    patente_camion = models.CharField(max_length = 20)
+    patente_camion = models.CharField(max_length = 20, unique=True)
     marca_camion = models.CharField(max_length = 20)
     modelo_camion = models.CharField(max_length = 20)
     capacidad_camion = models.CharField(max_length = 20)
@@ -113,11 +113,18 @@ class Material(models.Model):
 
 class CodigoQR(models.Model):
     camion = models.ForeignKey(Camion, on_delete=models.CASCADE)
-    activo = models.BooleanField()
+    activo = models.BooleanField(default=True)
     def __str__(self):
         return str(self.id)+" "+str(self.activo)
     class Meta:
         verbose_name_plural = "Codigos QR"
+    
+    def save(self, *args, **kwargs):
+        if not self.activo:
+            return super(CodigoQR, self).save(*args, **kwargs)
+        with transaction.atomic():
+            CodigoQR.objects.filter(activo=True,camion=self.camion).update(activo=False)
+            return super(CodigoQR, self).save(*args, **kwargs)
 
 
 
@@ -210,7 +217,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         return self
 
 class Administrador(User, PermissionsMixin):
-    email = models.CharField(max_length=100)
+    email = models.CharField(max_length=100, unique=True)
     cargo = models.CharField(max_length=100, blank=True)
     
     objects = AdminManager()

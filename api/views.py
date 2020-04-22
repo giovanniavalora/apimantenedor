@@ -35,6 +35,65 @@ import pytz
 # timezone.activate(settings.TIME_ZONE)
 # timezone.localtime(timezone.now())
 
+class CodigoQRCamion(APIView):
+    def get(self, request, pk, format=None):
+        try:
+            camion = Camion.objects.get(pk=pk)
+            serializer = CamionSerializer(camion)
+            print(camion)
+
+            resp={}
+            resp['request']= False
+            if CodigoQR.objects.filter(camion=pk).exists():
+                querycodigoqr = CodigoQR.objects.filter(camion=pk)
+                serializerCodigoQR = CodigoQRSerializer(querycodigoqr, many=True)
+                print("Llegue hasta aqui")
+                if CodigoQR.objects.filter(camion=pk,activo=True).exists():
+                    querycodigoqractivo = querycodigoqr.get(activo=True)
+                    # serializerCodigoQRactivo = CodigoQRSerializer(querycodigoqractivo)
+                    resp['request']= True
+                    resp['data']= {
+                        "id_codigoqr_activo": querycodigoqractivo.id,
+                        "codigosqr": serializerCodigoQR.data,
+                    }
+                    return Response(resp)
+                print("else?")
+                resp['error']= 'El camion no posee código QR activo'
+                return Response(resp,status=status.HTTP_400_BAD_REQUEST)
+            resp['error']= 'El camion no posee código QR'
+            return Response(resp,status=status.HTTP_400_BAD_REQUEST)
+        except Camion.DoesNotExist:
+            return Response({
+                'request': False,
+                'error':'El subcontratista solicitado no existe'
+                }, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+class FlotaSubcontratista(APIView):
+    def get(self, request, pk, format=None):
+        try:
+            subcontratista = Subcontratista.objects.get(pk=pk)
+            serializer = SubcontratistaSerializer(subcontratista)
+
+            querycamiones = Camion.objects.filter(subcontratista=pk)
+            serializerCamion = CamionSerializer(querycamiones, many=True)
+            resp={}
+            resp['request']= True
+            resp['data']= {
+                "cantidad_camiones": querycamiones.count(),
+                "camiones": serializerCamion.data,
+            }
+            return Response(resp)
+        except Subcontratista.DoesNotExist:
+            return Response({
+                'request': False,
+                'error':'El subcontratista solicitado no existe'
+                }, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+
 
 def cambio_origen_mail(despachador,origen,id_origentemporal):
     try: 
@@ -45,7 +104,6 @@ def cambio_origen_mail(despachador,origen,id_origentemporal):
         duracion = timezone.timedelta(minutes=origentemporal.duracion)
         administrador = Administrador.objects.filter(proyecto=despachador.proyecto, is_superuser=True)
         
-
         subject = '[Cambio Origen - '+origen.nombre_origen+'] '+despachador.nombre+' '+despachador.apellido
         message = despachador.nombre+' '+despachador.apellido+'\n\n'
         message = message+'Origen asignado: '+origenasignado.nombre_origen+'\n'
@@ -123,7 +181,7 @@ class IngresarDespachoApiView(APIView):
         resp['data'] = serializer.data
         return Response(resp, status=status.HTTP_201_CREATED)
 
-
+#eliminar 
 class SincronizacionDescargaApiView(APIView):
     permission_classes = (IsAuthenticated,)
     
@@ -237,9 +295,63 @@ class VoucherViewSet(viewsets.ModelViewSet):
     queryset = Voucher.objects.all()
     serializer_class = VoucherSerializer
 
+class DespachadorList(APIView):
+    # permission_classes = (IsAuthenticated,)
+    permission_classes = (AllowAny,) # permitir que cualquier usuario (autenticado o no) acceda a esta URL.
 
+    def get(self, request, format=None):
+        querydespachador = Despachador.objects.all()
+        serializer = DespachadorSerializer(querydespachador, many=True)
+        return Response(serializer.data)
 
+    def post(self, request):
+        user = request.data
+        serializer= DespachadorSerializer(data=user)
+        resp = {}
+        if serializer.is_valid(raise_exception=True):
+            serializer.save() #.save llamará al metodo create del serializador cuando desee crear un objeto y al método update cuando desee actualizar.
+            resp['request']= True
+            resp['data']= serializer.data
+            return Response(resp, status=status.HTTP_201_CREATED)
+        resp['request']= False
+        resp['data']= serializer.errors
+        return Response(resp, status=status.HTTP_400_BAD_REQUEST)
 
+class DespachadorDetail(APIView):
+    # permission_classes = (IsAuthenticated,)
+    permission_classes = (AllowAny,) # permitir que cualquier usuario (autenticado o no) acceda a esta URL.
+    serializer_class = DespachadorSerializer
+    def get(self, request, pk, format=None):
+        try:
+            despachador = Despachador.objects.get(pk=pk)
+            serializer = DespachadorSerializer(despachador)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Despachador.DoesNotExist:
+            return Response({'request': False,'error':'El despachador solicitado no existe'},status=status.HTTP_400_BAD_REQUEST)
+
+    def put(self, request, pk, format=None):
+        try:
+            despachador = Despachador.objects.get(pk=pk)
+            serializer = DespachadorSerializer(despachador, data=request.data, partial=True)
+            resp={}
+            if serializer.is_valid(raise_exception=True):
+                serializer.save()
+                resp['request']= True
+                resp['data']= serializer.data
+                return Response(resp, status=status.HTTP_200_OK)
+            resp['request']= False
+            resp['data']= serializer.errors
+            return Response(resp, status=HTTP_400_BAD_REQUEST)
+        except Despachador.DoesNotExist:
+            return Response({'request': False,'error':'El Despachador solicitado no existe'},status=status.HTTP_400_BAD_REQUEST)
+    
+    def delete(self, request, pk, format=None):
+        try:
+            despachador = Despachador.objects.get(pk=pk)
+            despachador.delete()
+            return Response({'request': True,'error':'Eliminado exitosamente'},status=status.HTTP_204_NO_CONTENT)
+        except Despachador.DoesNotExist:
+            return Response({'request': False,'error':'El Despachador solicitado no existe'},status=status.HTTP_400_BAD_REQUEST)
 
 # Registra un nuevo usuario General (ni despachador ni administrador)
 # class CreateUserAPIView(APIView):
@@ -283,7 +395,7 @@ class CreateDespAPIView(APIView):
         serializer= DespachadorSerializer(data=user)
         resp = {}
         if serializer.is_valid(raise_exception=True):
-            serializer.save() #el metodo .save del serializador llamará al metodo create cuando desee crear un objeto y al método update cuando desee actualizar.
+            serializer.save() #.save llamará al metodo create del serializador cuando desee crear un objeto y al método update cuando desee actualizar.
             resp['request']= True
             resp['data']= serializer.data
             return Response(resp, status=status.HTTP_201_CREATED)
@@ -309,7 +421,7 @@ class UserRetrieveUpdateAPIView(RetrieveUpdateAPIView):
             resp['request']= True
             resp['data']= serializer.data
             return Response(resp, status=status.HTTP_200_OK)
-        resp['request']= True
+        resp['request']= False
         resp['data']= serializer.errors
         return Response(resp, status=HTTP_400_BAD_REQUEST)
 
@@ -320,10 +432,10 @@ class UserRetrieveUpdateAPIView(RetrieveUpdateAPIView):
 @permission_classes([])
 def authenticate_user(request):
     try:
-        rut = request.data['rut']
+        email = request.data['email']
         password = request.data['password']
-        if User.objects.filter(rut=rut).exists():
-            user = User.objects.get(rut=rut)
+        if Administrador.objects.filter(email=email).exists():
+            user = Administrador.objects.get(email=email)
         else:
             res = {'request': False, 'error': 'no puede autenticarse con las credenciales dadas o la cuenta ha sido desactivada'}
             return Response(res, status=status.HTTP_403_FORBIDDEN)
@@ -331,9 +443,14 @@ def authenticate_user(request):
             try:
                 payload = jwt_payload_handler(user)
                 token = jwt.encode(payload, settings.SECRET_KEY)
+                serializer = AdministradorSerializer(user)
+                print(serializer)
                 resp = {}
                 resp['request']= True
-                resp['data']= {'token': token}
+                resp['data']= {
+                    'token': token,
+                    'info': serializer.data
+                }
                 user_logged_in.send(sender=user.__class__, request=request, user=user) # almacenamos el último tiempo de inicio de sesión del usuario con este código.
                 return Response(resp, status=status.HTTP_200_OK)
 
@@ -343,7 +460,7 @@ def authenticate_user(request):
             res = {'request': False, 'error': 'no puede autenticarse con las credenciales dadas o la cuenta ha sido desactivada'}
             return Response(res, status=status.HTTP_403_FORBIDDEN)
     except KeyError:
-        res = {'request': False, 'error': 'por favor proporcione un rut y una password'}
+        res = {'request': False, 'error': 'por favor proporcione un email y una password'}
         return Response(res, status=status.HTTP_403_FORBIDDEN)
     
 

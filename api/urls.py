@@ -23,6 +23,7 @@ router.register(r'Material', views.MaterialViewSet)
 router.register(r'OrigenTemporal', views.OrigenTemporalViewSet)
 router.register(r'Voucher', views.VoucherViewSet)
 router.register(r'CodigoQR', views.CodigoQRViewSet)
+# router.register(r'Despachador', views.DespachadorViewSet)
 # rouer.register(r'SincronizacionDescarga', SincronizacionDescarga.as_view())
 
 
@@ -30,12 +31,17 @@ urlpatterns = [
     path('', include(router.urls)),
     
     path('crearAdministrador/', CreateAdminAPIView.as_view()),
-    path('crearDespachador/', CreateDespAPIView.as_view()),
     path('login/', authenticate_user),
-    path('update/', UserRetrieveUpdateAPIView.as_view()),
     path('SincronizacionDescarga/', SincronizacionDescargaApiView.as_view()),
     path('IngresarDespacho/', IngresarDespachoApiView.as_view()),
     path('CambiarOrigen/', CambiarOrigenApiView.as_view()),
+    path('FlotaSubcontratista/<int:pk>/', FlotaSubcontratista.as_view()),
+    path('CodigoQRCamion/<int:pk>/', CodigoQRCamion.as_view()),
+
+    path('Despachador/', DespachadorList.as_view()),
+    path('Despachador/<int:pk>/', DespachadorDetail.as_view()),
+
+    
 
     
     # path('crearUsuario/', CreateUserAPIView.as_view()),
