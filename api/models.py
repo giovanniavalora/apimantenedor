@@ -58,7 +58,7 @@ class Camion(models.Model):
     nombre_conductor_principal = models.CharField(max_length = 50)
     apellido_conductor_principal = models.CharField(max_length = 50)
     telefono_conductor_principal = models.CharField(max_length = 20)
-    descripcion = models.CharField(max_length = 20)
+    descripcion = models.CharField(max_length = 20, blank=True)
     numero_ejes = models.CharField(max_length = 5)
     unidad_medida = models.CharField(max_length = 5, choices=UNIDADES)
     color_camion = models.CharField(max_length = 20)

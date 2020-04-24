@@ -50,10 +50,10 @@ class CodigoQRCamion(APIView):
                 print("Llegue hasta aqui")
                 if CodigoQR.objects.filter(camion=pk,activo=True).exists():
                     querycodigoqractivo = querycodigoqr.get(activo=True)
-                    # serializerCodigoQRactivo = CodigoQRSerializer(querycodigoqractivo)
+                    serializerCodigoQRactivo = CodigoQRSerializer(querycodigoqractivo)
                     resp['request']= True
                     resp['data']= {
-                        "id_codigoqr_activo": querycodigoqractivo.id,
+                        "codigoqr_activo": serializerCodigoQRactivo.data,
                         "codigosqr": serializerCodigoQR.data,
                     }
                     return Response(resp)
@@ -384,46 +384,6 @@ class CreateAdminAPIView(APIView):
             resp['request']= True
             resp['data']= serializer.errors
             return Response(resp, status=status.HTTP_400_BAD_REQUEST)
-
-
-# Registra un nuevo usuario Despachador
-class CreateDespAPIView(APIView):
-    # permission_classes = (IsAuthenticated,)
-    permission_classes = (AllowAny,) # permitir que cualquier usuario (autenticado o no) acceda a esta URL.
-    def post(self, request):
-        user = request.data
-        serializer= DespachadorSerializer(data=user)
-        resp = {}
-        if serializer.is_valid(raise_exception=True):
-            serializer.save() #.save llamará al metodo create del serializador cuando desee crear un objeto y al método update cuando desee actualizar.
-            resp['request']= True
-            resp['data']= serializer.data
-            return Response(resp, status=status.HTTP_201_CREATED)
-        resp['request']= False
-        resp['data']= serializer.errors
-        return Response(resp, status=status.HTTP_400_BAD_REQUEST)
-
-
-# Obtener información de usuario o Actualizarlo (con token)
-class UserRetrieveUpdateAPIView(RetrieveUpdateAPIView):
-    permission_classes = (IsAuthenticated,)# Allow only authenticated users to access this url
-    serializer_class = UserSerializer
-    def get(self, request, *args, **kwargs):
-        serializer = self.serializer_class(request.user) #serializador para manejar la conversión de nuestro objeto `Usuario` en algo que puede ser JSONified y enviado al cliente.
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-    def put(self, request, *args, **kwargs):
-        serializer_data = request.data.get('user', {})
-        serializer = UserSerializer(request.user, data=serializer_data, partial=True)
-        resp = {}
-        if serializer.is_valid(raise_exception=True):
-            serializer.save()
-            resp['request']= True
-            resp['data']= serializer.data
-            return Response(resp, status=status.HTTP_200_OK)
-        resp['request']= False
-        resp['data']= serializer.errors
-        return Response(resp, status=HTTP_400_BAD_REQUEST)
 
 
 # Login (Devuelve el Token)
