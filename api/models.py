@@ -72,8 +72,11 @@ class Camion(models.Model):
 class Origen(models.Model):
     proyecto = models.ForeignKey(Proyecto, on_delete=models.CASCADE)
     nombre_origen = models.CharField(max_length = 100)
-    longitud = models.CharField(max_length = 20)
+    comuna = models.CharField(max_length = 50,blank=True)
+    calle = models.CharField(max_length = 50,blank=True)
+    numero = models.IntegerField(blank=True)
     latitud = models.CharField(max_length = 20)
+    longitud = models.CharField(max_length = 20)
     def __str__(self):
         return self.nombre_origen
     class Meta:
@@ -293,7 +296,7 @@ class Voucher(models.Model):
     punto_suborigen = models.CharField(max_length = 100, blank=True)
     punto_destino = models.CharField(max_length = 100)
     contador_impresiones = models.IntegerField()
+    id_qr = models.IntegerField(blank=True)
     def __str__(self):
         cadena = "voucher_"+str(self.id)+" "+self.despachador
         return cadena
-

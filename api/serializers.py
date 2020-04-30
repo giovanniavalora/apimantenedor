@@ -69,6 +69,7 @@ class DespachadorSerializer(serializers.ModelSerializer):
         instance.set_password(validated_data.get('password', instance.password))
         instance.telefono = validated_data.get('telefono', instance.telefono)
         instance.origen_asignado = validated_data.get('origen_asignado', instance.origen_asignado)
+        instance.nombre = validated_data.get('nombre', instance.nombre)
         instance.apellido = validated_data.get('apellido', instance.apellido)
         instance.is_active = validated_data.get('is_active', instance.is_active)
         instance.proyecto_id = validated_data.get('proyecto_id', instance.proyecto_id)
