@@ -74,7 +74,7 @@ class Origen(models.Model):
     nombre_origen = models.CharField(max_length = 100)
     comuna = models.CharField(max_length = 50,blank=True)
     calle = models.CharField(max_length = 50,blank=True)
-    numero = models.IntegerField(blank=True)
+    numero = models.IntegerField(blank=True,null=True)
     latitud = models.CharField(max_length = 20)
     longitud = models.CharField(max_length = 20)
     def __str__(self):
@@ -296,7 +296,7 @@ class Voucher(models.Model):
     punto_suborigen = models.CharField(max_length = 100, blank=True)
     punto_destino = models.CharField(max_length = 100)
     contador_impresiones = models.IntegerField()
-    id_qr = models.IntegerField(blank=True)
+    id_qr = models.IntegerField(blank=True, null=True)
     def __str__(self):
         cadena = "voucher_"+str(self.id)+" "+self.despachador
         return cadena
