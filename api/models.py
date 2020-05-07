@@ -59,9 +59,9 @@ class Camion(models.Model):
     apellido_conductor_principal = models.CharField(max_length = 50)
     telefono_conductor_principal = models.CharField(max_length = 20)
     descripcion = models.CharField(max_length = 20, blank=True)
-    numero_ejes = models.CharField(max_length = 5)
+    numero_ejes = models.CharField(max_length = 5, blank=True)
     unidad_medida = models.CharField(max_length = 5, choices=UNIDADES)
-    color_camion = models.CharField(max_length = 20)
+    color_camion = models.CharField(max_length = 20, blank=True)
     # foto_camion = models.FileField(upload_to=get_upload_path_camion, blank=True)
     def __str__(self):
         return self.patente_camion+" "+self.marca_camion+" "+self.modelo_camion
@@ -98,7 +98,9 @@ class Destino(models.Model):
     nombre_destino = models.CharField(max_length = 100)
     nombre_propietario = models.CharField(max_length = 100)
     rut_propietario = models.CharField(max_length = 20)
-    direccion = models.CharField(max_length = 100)
+    comuna = models.CharField(max_length = 50,blank=True)
+    calle = models.CharField(max_length = 50,blank=True)
+    numero = models.IntegerField(blank=True,null=True)
     longitud = models.CharField(max_length = 20)
     latitud = models.CharField(max_length = 20)
     def __str__(self):
