@@ -48,36 +48,34 @@ def export_to_xlsx(request):
     response['Content-Disposition'] = 'attachment; filename={date}-despachos.xlsx'.format(
         date=datetime.now().strftime('%Y-%m-%d'),
     )
-
     voucher_queryset = Voucher.objects.all()
     camion_queryset = Camion.objects.all()
 
     workbook = Workbook()
     header_font = Font(name='Calibri', bold=True)
-    
     # Get active worksheet/tab
     worksheet = workbook.active
     worksheet.title = 'Registro de Salida'
     # Definir los titulos por columna
     columns = [
-        ('id',5),
-        ('despachador',10),
-        ('proyecto',15),
-        ('contador_impresiones',15),
-        ('nombre_cliente',10),
-        ('rut_cliente',15),
-        ('nombre_subcontratista',25),
-        ('nombre_conductor_principal',25),
-        ('apellido_conductor_principal',25),
-        ('fecha',25),
-        ('hora',25),
-        ('patente',25),
-        ('foto_patente',25),
-        ('volumen',25),
-        ('tipo_material',25),
-        ('punto_origen',25),
-        ('punto_suborigen',25),
-        ('punto_destino',25),
+        ('Id',5),
+        ('Despachador',10),
+        ('Proyecto',15),
+        ('Nro. impresiones',15),
+        ('Nombre cliente',15),
+        ('Rut cliente',15),
+        ('Nombre subcontratista',25),
+        ('Nombre_conductor_principal',25),
+        ('Apellido_conductor_principal',25),
+        ('Fecha',10),
+        ('Hora',8),
+        ('Patente',8),
+        ('Foto patente',15),
+        ('Volumen',7),
+        ('Tipo material',15),
+        ('Punto origen',15),
+        ('Punto suborigen',15),
+        ('Punto destino',15),
     ]
     row_num = 1
     # Asignar los titulos para cada celda de la cabecera
@@ -127,17 +125,17 @@ def export_to_xlsx(request):
     )
     # Definir los titulos por columna
     columns = [
-        ('Subcontratista',15),
+        ('Subcontratista',25),
         ('Patente',10),
         ('Marca',10),
         ('Modelo',10),
 
         ('Color',8),
         ('Capacidad',9),
-        ('Unidad',6),
+        ('Unidad',7),
         ('Numero ejes',11),
 
-        ('Nombre conductor ppal',18),
+        ('Nombre conductor ppal',20),
         ('Apellido conductor ppal',20),
     ]
     row_num = 1
@@ -177,6 +175,8 @@ def export_to_xlsx(request):
     workbook.save(response)
     return response
 
+
+
 class CodigoQRCamion(APIView):
     def get(self, request, pk, format=None):
         try:
@@ -211,6 +211,8 @@ class CodigoQRCamion(APIView):
                 }, 
                 status=status.HTTP_400_BAD_REQUEST
             )
+
+
 
 class FlotaSubcontratista(APIView):
     def get(self, request, pk, format=None):
@@ -302,6 +304,7 @@ class CambiarOrigenApiView(APIView):
             return Response(serializerOT.errors, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             raise e
+
 
 class IngresarDespachoApiView(APIView):
     serializer_class = IngresarDespachoSerializer
@@ -437,6 +440,20 @@ class VoucherViewSet(viewsets.ModelViewSet):
     queryset = Voucher.objects.all()
     serializer_class = VoucherSerializer
 
+
+# Registra un nuevo usuario General (ni despachador ni administrador)
+# class CreateUserAPIView(APIView):
+#     # permission_classes = (IsAuthenticated,)
+#     permission_classes = (AllowAny,) # permitir que cualquier usuario (autenticado o no) acceda a esta URL.
+#     def post(self, request):
+#         user = request.data
+#         print(user)
+#         serializer = UserSerializer(data=user)
+#         serializer.is_valid(raise_exception=True)
+#         serializer.save()
+#         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
 class DespachadorList(APIView):
     # permission_classes = (IsAuthenticated,)
     permission_classes = (AllowAny,) # permitir que cualquier usuario (autenticado o no) acceda a esta URL.
@@ -495,38 +512,64 @@ class DespachadorDetail(APIView):
         except Despachador.DoesNotExist:
             return Response({'request': False,'error':'El Despachador solicitado no existe'},status=status.HTTP_400_BAD_REQUEST)
 
-# Registra un nuevo usuario General (ni despachador ni administrador)
-# class CreateUserAPIView(APIView):
-#     # permission_classes = (IsAuthenticated,)
-#     permission_classes = (AllowAny,) # permitir que cualquier usuario (autenticado o no) acceda a esta URL.
-#     def post(self, request):
-#         user = request.data
-#         print(user)
-#         serializer = UserSerializer(data=user)
-#         serializer.is_valid(raise_exception=True)
-#         serializer.save()
-#         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-
-# Registra un nuevo usuario Administrador
-class CreateAdminAPIView(APIView):
+class AdministradorList(APIView):
     # permission_classes = (IsAuthenticated,)
-    permission_classes = (AllowAny,)
+    permission_classes = (AllowAny,) # permitir que cualquier usuario (autenticado o no) acceda a esta URL.
     serializer_class = AdministradorSerializer
+    def get(self, request, format=None):
+        query = Administrador.objects.all()
+        serializer = self.serializer_class(query, many=True)
+        return Response(serializer.data)
+
     def post(self, request):
         user = request.data
-        serializer = self.serializer_class(data=user)
+        serializer= self.serializer_class(data=user)
         resp = {}
         if serializer.is_valid(raise_exception=True):
-            serializer.save()
+            serializer.save() #.save llamará al metodo create del serializador cuando desee crear un objeto y al método update cuando desee actualizar.
             resp['request']= True
             resp['data']= serializer.data
             return Response(resp, status=status.HTTP_201_CREATED)
-        else:
-            resp['request']= True
-            resp['data']= serializer.errors
-            return Response(resp, status=status.HTTP_400_BAD_REQUEST)
+        resp['request']= False
+        resp['data']= serializer.errors
+        return Response(resp, status=status.HTTP_400_BAD_REQUEST)
 
+class AdministradorDetail(APIView):
+    # permission_classes = (IsAuthenticated,)
+    permission_classes = (AllowAny,) # permitir que cualquier usuario (autenticado o no) acceda a esta URL.
+    serializer_class = AdministradorSerializer
+    def get(self, request, pk, format=None):
+        try:
+            query = Administrador.objects.get(pk=pk)
+            serializer = DespachadorSerializer(query)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Administrador.DoesNotExist:
+            return Response({'request': False,'error':'El administrador solicitado no existe'},status=status.HTTP_400_BAD_REQUEST)
+
+    def put(self, request, pk, format=None):
+        try:
+            query = Administrador.objects.get(pk=pk)
+            serializer = DespachadorSerializer(query, data=request.data, partial=True)
+            resp={}
+            if serializer.is_valid(raise_exception=True):
+                serializer.save()
+                resp['request']= True
+                resp['data']= serializer.data
+                return Response(resp, status=status.HTTP_200_OK)
+            resp['request']= False
+            resp['data']= serializer.errors
+            return Response(resp, status=HTTP_400_BAD_REQUEST)
+        except Administrador.DoesNotExist:
+            return Response({'request': False,'error':'El administrador solicitado no existe'},status=status.HTTP_400_BAD_REQUEST)
+    
+    def delete(self, request, pk, format=None):
+        try:
+            query = Administrador.objects.get(pk=pk)
+            query.delete()
+            return Response({'request': True,'error':'Eliminado exitosamente'},status=status.HTTP_204_NO_CONTENT)
+        except Administrador.DoesNotExist:
+            return Response({'request': False,'error':'El administrador solicitado no existe'},status=status.HTTP_400_BAD_REQUEST)
 
 # Login (Devuelve el Token)
 @api_view(['POST'])
@@ -553,7 +596,7 @@ def authenticate_user(request):
                     'token': token,
                     'info': serializer.data
                 }
-                user_logged_in.send(sender=user.__class__, request=request, user=user) # almacenamos el último tiempo de inicio de sesión del usuario con este código.
+                user_logged_in.send(sender=user.__class__, request=request, user=user) # almacenamos el último datetime de inicio de sesión.
                 return Response(resp, status=status.HTTP_200_OK)
 
             except Exception as e:

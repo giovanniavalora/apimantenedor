@@ -30,7 +30,6 @@ router.register(r'CodigoQR', views.CodigoQRViewSet)
 urlpatterns = [
     path('', include(router.urls)),
     
-    path('crearAdministrador/', CreateAdminAPIView.as_view()),
     path('login/', authenticate_user),
     path('SincronizacionDescarga/', SincronizacionDescargaApiView.as_view()),
     path('IngresarDespacho/', IngresarDespachoApiView.as_view()),
@@ -38,6 +37,8 @@ urlpatterns = [
     path('FlotaSubcontratista/<int:pk>/', FlotaSubcontratista.as_view()),
     path('CodigoQRCamion/<int:pk>/', CodigoQRCamion.as_view()),
 
+    path('Administrador/', AdministradorList.as_view()),
+    path('Administrador/<int:pk>/', AdministradorDetail.as_view()),
     path('Despachador/', DespachadorList.as_view()),
     path('Despachador/<int:pk>/', DespachadorDetail.as_view()),
     path('Reporte/', export_to_xlsx),
