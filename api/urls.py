@@ -40,6 +40,7 @@ urlpatterns = [
 
     path('Despachador/', DespachadorList.as_view()),
     path('Despachador/<int:pk>/', DespachadorDetail.as_view()),
+    path('Reporte/', export_to_xlsx),
 
     
 

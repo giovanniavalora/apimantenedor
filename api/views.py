@@ -35,6 +35,148 @@ import pytz
 # timezone.activate(settings.TIME_ZONE)
 # timezone.localtime(timezone.now())
 
+from openpyxl import Workbook
+from openpyxl.styles import Font, Alignment, Border, Side, PatternFill
+from openpyxl.utils import get_column_letter
+from django.http import HttpResponse
+
+def export_to_xlsx(request):
+    response = HttpResponse(
+        # content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        content_type='application/vnd.ms-excel',
+    )
+    response['Content-Disposition'] = 'attachment; filename={date}-despachos.xlsx'.format(
+        date=datetime.now().strftime('%Y-%m-%d'),
+    )
+
+    voucher_queryset = Voucher.objects.all()
+    camion_queryset = Camion.objects.all()
+
+    workbook = Workbook()
+    header_font = Font(name='Calibri', bold=True)
+    
+    # Get active worksheet/tab
+    worksheet = workbook.active
+    worksheet.title = 'Registro de Salida'
+    # Definir los titulos por columna
+    columns = [
+        ('id',5),
+        ('despachador',10),
+        ('proyecto',15),
+        ('contador_impresiones',15),
+        ('nombre_cliente',10),
+        ('rut_cliente',15),
+        ('nombre_subcontratista',25),
+        ('nombre_conductor_principal',25),
+        ('apellido_conductor_principal',25),
+        ('fecha',25),
+        ('hora',25),
+        ('patente',25),
+        ('foto_patente',25),
+        ('volumen',25),
+        ('tipo_material',25),
+        ('punto_origen',25),
+        ('punto_suborigen',25),
+        ('punto_destino',25),
+    ]
+    row_num = 1
+    # Asignar los titulos para cada celda de la cabecera
+    for col_num, (column_title, column_width) in enumerate(columns, 1):
+        cell = worksheet.cell(row=row_num, column=col_num)
+        cell.value = column_title
+        cell.font = header_font
+        # set column width
+        column_letter = get_column_letter(col_num)
+        column_dimensions = worksheet.column_dimensions[column_letter]
+        column_dimensions.width = column_width
+    # Iterar por todos los vouchers
+    for voucher in voucher_queryset:
+        row_num += 1
+        # print("voucher: ",voucher)
+        # Define the data for each cell in the row 
+        row = [
+            voucher.id,
+            str(voucher.despachador),
+            voucher.proyecto,
+            voucher.contador_impresiones,
+            voucher.nombre_cliente,
+            voucher.rut_cliente,
+            voucher.nombre_subcontratista,
+            voucher.nombre_conductor_principal,
+            voucher.apellido_conductor_principal,
+            voucher.fecha,
+            voucher.hora,
+            voucher.patente,
+            str(voucher.foto_patente),
+            voucher.volumen,
+            voucher.tipo_material,
+            voucher.punto_origen,
+            voucher.punto_suborigen,
+            voucher.punto_destino,
+        ]
+        # Assign the data for each cell of the row 
+        for col_num, cell_value in enumerate(row, 1):
+            cell = worksheet.cell(row=row_num, column=col_num)
+            cell.value = cell_value
+
+
+    # Nueva hoja de trabajo
+    worksheet = workbook.create_sheet(
+        title='Flota Activa',
+        index=2,
+    )
+    # Definir los titulos por columna
+    columns = [
+        ('Subcontratista',15),
+        ('Patente',10),
+        ('Marca',10),
+        ('Modelo',10),
+
+        ('Color',8),
+        ('Capacidad',9),
+        ('Unidad',6),
+        ('Numero ejes',11),
+
+        ('Nombre conductor ppal',18),
+        ('Apellido conductor ppal',20),
+    ]
+    row_num = 1
+    # Asignar los titulos para cada celda de la cabecera
+    for col_num, (column_title, column_width) in enumerate(columns, 1):
+        cell = worksheet.cell(row=row_num, column=col_num)
+        cell.value = column_title
+        cell.font = header_font
+        # set column width
+        column_letter = get_column_letter(col_num)
+        column_dimensions = worksheet.column_dimensions[column_letter]
+        column_dimensions.width = column_width
+    # Iterar por todos los camiones
+    for camion in camion_queryset:
+        row_num += 1
+        # print("camion: ",camion)
+        # Define the data for each cell in the row 
+        row = [
+            str(camion.subcontratista),
+            camion.patente_camion,
+            camion.marca_camion,
+            camion.modelo_camion,
+
+            camion.color_camion,
+            camion.capacidad_camion,
+            camion.unidad_medida,
+            camion.numero_ejes,
+
+            camion.nombre_conductor_principal,
+            camion.apellido_conductor_principal,
+        ]
+        # Assign the data for each cell of the row 
+        for col_num, cell_value in enumerate(row, 1):
+            cell = worksheet.cell(row=row_num, column=col_num)
+            cell.value = cell_value
+
+    workbook.save(response)
+    return response
+
 class CodigoQRCamion(APIView):
     def get(self, request, pk, format=None):
         try:

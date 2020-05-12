@@ -36,7 +36,7 @@ class Subcontratista(models.Model):
     email_contacto = models.CharField(max_length = 100, blank=True, default='')
     telefono_contacto = models.CharField(max_length = 20)
     def __str__(self):
-        return self.razon_social+" "+self.rut
+        return self.razon_social
 
 
 def get_upload_path_camion(instance, filename):
@@ -300,5 +300,5 @@ class Voucher(models.Model):
     contador_impresiones = models.IntegerField()
     id_qr = models.IntegerField(blank=True, null=True)
     def __str__(self):
-        cadena = "voucher_"+str(self.id)+" "+self.despachador
+        cadena = "voucher_"+str(self.id)+" "+str(self.despachador)
         return cadena
