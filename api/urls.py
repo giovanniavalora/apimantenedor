@@ -41,7 +41,7 @@ urlpatterns = [
     path('Administrador/<int:pk>/', AdministradorDetail.as_view()),
     path('Despachador/', DespachadorList.as_view()),
     path('Despachador/<int:pk>/', DespachadorDetail.as_view()),
-    path('Reporte/', export_to_xlsx),
+    path('Reporte/<slug:start>/<slug:end>/', exportar_a_xlsx),
 
     
 
