@@ -496,6 +496,13 @@ def authenticate_user(request):
 # @authentication_classes([])
 # @permission_classes([])
 def exportar_a_xlsx(request,start,end):
+
+    if (not Voucher.objects.filter(fecha__range=(start,end)).exists()):
+        print("\nno hay vouchers")
+        res={}
+        res = {'request': False, 'error': 'No existen registros para el rango especificado'}
+        return Response(res,status=status.HTTP_204_NO_CONTENT)
+
     response = HttpResponse(
         # content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         content_type='application/vnd.ms-excel',
@@ -514,24 +521,24 @@ def exportar_a_xlsx(request,start,end):
     worksheet.title = 'Registro de Salida'
     # Definir los titulos por columna
     columns = [
-        ('Id',5),
-        ('Despachador',10),
-        ('Proyecto',10),
-        ('Nro. impresiones',10),
-        ('Nombre cliente',12),
-        ('Rut cliente',12),
-        ('Nombre subcontratista',20),
-        ('Nombre conductor principal',20),
-        ('Apellido conductor principal',20),
-        ('Fecha',11),
-        ('Hora',8),
-        ('Patente',8),
-        ('Foto patente',15),
-        ('Volumen',7),
-        ('Tipo material',13),
-        ('Punto origen',15),
-        ('Punto suborigen',15),
-        ('Punto destino',15),
+        ('Id',5),  #1
+        ('Despachador',10), #28 - falta apellido
+        ('Proyecto',10), #2
+        ('Nro. impresiones',10), #3
+        ('Nombre cliente',12), #no va?
+        ('Rut cliente',12), #no va?
+        ('Nombre subcontratista',20), #14
+        ('Nombre conductor principal',20), #27
+        ('Apellido conductor principal',20), #27
+        ('Fecha',11), #4
+        ('Hora',8), #5
+        ('Patente',8), #20
+        ('Foto patente',15), #
+        ('Volumen',7), #24
+        ('Tipo material',13), #13
+        ('Punto origen',15), #6
+        ('Punto suborigen',15), #9
+        ('Punto destino',15), #10
     ]
     row_num = 1
     # Asignar los titulos para cada celda de la cabecera

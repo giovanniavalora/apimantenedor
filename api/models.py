@@ -41,9 +41,9 @@ class Subcontratista(models.Model):
 
 def get_upload_path_camion(instance, filename):
     now = datetime.now()
-    return 'fotoscamiones/{year}/{month}/{day}/user_{id_desp}/{fn}'.format(
+    return 'fotoscamiones/{year}/{month}/{day}/subcontratista_{id_desp}/{fn}'.format(
         year=now.strftime('%Y'), month=now.strftime('%m'), day=now.strftime('%d'),
-         id_desp=instance.despachador.id, fn=filename)
+         id_desp=instance.subcontratista.id, fn=filename)
 
 class Camion(models.Model):
     UNIDADES = [
@@ -55,14 +55,14 @@ class Camion(models.Model):
     marca_camion = models.CharField(max_length = 20)
     modelo_camion = models.CharField(max_length = 20)
     capacidad_camion = models.CharField(max_length = 20)
+    unidad_medida = models.CharField(max_length = 5, choices=UNIDADES)
     nombre_conductor_principal = models.CharField(max_length = 50)
     apellido_conductor_principal = models.CharField(max_length = 50)
     telefono_conductor_principal = models.CharField(max_length = 20)
     descripcion = models.CharField(max_length = 20, blank=True)
-    numero_ejes = models.CharField(max_length = 5, blank=True)
-    unidad_medida = models.CharField(max_length = 5, choices=UNIDADES)
+    numero_ejes = models.CharField(max_length = 20, blank=True)
     color_camion = models.CharField(max_length = 20, blank=True)
-    # foto_camion = models.FileField(upload_to=get_upload_path_camion, blank=True)
+    foto_camion = models.FileField(upload_to=get_upload_path_camion, blank=True)
     def __str__(self):
         return self.patente_camion+" "+self.marca_camion+" "+self.modelo_camion
     class Meta:
