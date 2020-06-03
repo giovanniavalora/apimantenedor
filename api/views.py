@@ -25,6 +25,7 @@ from rest_framework.response import Response
 from rest_framework import viewsets
 from .serializers import *
 from .models import *
+from django.db.models import Count
 
 from django.core.mail import EmailMultiAlternatives
 import smtplib
@@ -512,7 +513,11 @@ def exportar_a_xlsx(request,start,end):
     )
 
     voucher_queryset = Voucher.objects.filter(fecha__range=(start,end))
-    camion_queryset = Camion.objects.all()
+    camion_queryset = Voucher.objects.filter(fecha__range=(start,end)) \
+                .values('patente') \
+                .annotate(despachos_realizados=Count('patente')) \
+                .order_by('-despachos_realizados')
+    # camion_queryset = Camion.objects.all()
 
     workbook = Workbook()
     header_font = Font(name='Calibri', bold=True)
@@ -522,23 +527,39 @@ def exportar_a_xlsx(request,start,end):
     # Definir los titulos por columna
     columns = [
         ('Id',5),  #1
-        ('Despachador',10), #28 - falta apellido
+        ('Despachador',12), #28 - falta apellido
+        ('RUT Despachador',13), #29
+        ('Telefono Despachador Asociado',14), #30
         ('Proyecto',10), #2
         ('Nro. impresiones',10), #3
         ('Nombre cliente',12), #no va?
         ('Rut cliente',12), #no va?
         ('Nombre subcontratista',20), #14
+        ('Razón social subcontratista',20), #15
+        ('RUT subcontratista',20), #16
+        ('Contacto subcontratista',20), #17
+        ('Email subcontratista',20), #18
+        ('Teléfono subcontratista',20), #19
         ('Nombre conductor principal',20), #27
         ('Apellido conductor principal',20), #27
         ('Fecha',11), #4
         ('Hora',8), #5
         ('Patente',8), #20
-        ('Foto patente',15), #
-        ('Volumen',7), #24
+        ('Marca',7), #21
+        ('Modelo',8), #22
+        ('Color',8), #23
+        ('Volumen',8), #24
+        ('Unidad de medida',8), #25
+        ('Nro ejes',8), #26
+        ('Foto patente',15), #32
         ('Tipo material',13), #13
         ('Punto origen',15), #6
+        ('Comuna origen',16), #7
+        ('Dirección origen',18), #8
         ('Punto suborigen',15), #9
         ('Punto destino',15), #10
+        ('Comuna destino',16), #11
+        ('Dirección destino',18), #12
     ]
     row_num = 1
     # Asignar los titulos para cada celda de la cabecera
@@ -553,29 +574,80 @@ def exportar_a_xlsx(request,start,end):
     # Iterar por todos los vouchers
     for voucher in voucher_queryset:
         row_num += 1
-        # print("voucher: ",voucher)
+        # print("voucher.algo: ", Origen.objects.get(nombre_origen=voucher.punto_origen))
+        
+        # query_origen = Origen.objects.get(nombre_origen=voucher.punto_origen)
+        # serializerOrigen = OrigenSerializer(query_origen)
+        # print("query_origen: ", query_origen)
+        # print("query_origen2: ", serializerOrigen)
+
+
+        serializerOrigen=OrigenSerializer()
+        if Origen.objects.filter(nombre_origen=voucher.punto_origen).exists():
+            query_origen = Origen.objects.get(nombre_origen=voucher.punto_origen)
+            serializerOrigen = OrigenSerializer(query_origen)
+
+        serializerDestino=DestinoSerializer()
+        if Destino.objects.filter(nombre_destino=voucher.punto_destino).exists():
+            query_destino = Destino.objects.get(nombre_destino=voucher.punto_destino)
+            serializerDestino = DestinoSerializer(query_destino)
+        
+        serializerSubcontratista=SubcontratistaSerializer()
+        if Subcontratista.objects.filter(rut=voucher.rut_subcontratista).exists():
+            query_subcontratista = Subcontratista.objects.get(rut=voucher.rut_subcontratista)
+            serializerSubcontratista = SubcontratistaSerializer(query_subcontratista)
+
+        serializerCamion=CamionSerializer()
+        if Camion.objects.filter(patente_camion=voucher.patente).exists():
+            query_camion = Camion.objects.get(patente_camion=voucher.patente)
+            serializerCamion = CamionSerializer(query_camion)
+
+        serializerDespachador=DespachadorSerializer()
+        if Despachador.objects.filter(pk=voucher.despachador).exists():
+            query_despachador = Despachador.objects.get(pk=voucher.despachador)
+            serializerDespachador = DespachadorSerializer(query_despachador)
+
+        
+        
+        # administrador = Proyecto.objects.filter(nombre_origen=despachador.proyecto, is_superuser=True)
         # Define the data for each cell in the row 
         
         row = [
-            voucher.id,
-            str(voucher.despachador),
+            voucher.id, #1
+            str(voucher.despachador),#28 - falta apellido
+            serializerDespachador.data['rut'], #29
+            serializerDespachador.data['telefono'], #30
             # voucher.proyecto,
-            str(Proyecto.objects.get(id=voucher.proyecto)),
-            voucher.contador_impresiones,
-            voucher.nombre_cliente,
-            voucher.rut_cliente,
-            voucher.nombre_subcontratista,
-            voucher.nombre_conductor_principal,
-            voucher.apellido_conductor_principal,
-            voucher.fecha,
-            voucher.hora,
-            voucher.patente,
-            str(voucher.foto_patente),
-            voucher.volumen,
-            voucher.tipo_material,
-            voucher.punto_origen,
-            voucher.punto_suborigen,
-            voucher.punto_destino,
+            str(Proyecto.objects.get(id=voucher.proyecto)),#2
+            voucher.contador_impresiones, #3
+            voucher.nombre_cliente, #no va?
+            voucher.rut_cliente, #no va?
+            voucher.nombre_subcontratista, #14
+            serializerSubcontratista.data['razon_social'], #15
+            voucher.rut_subcontratista, #16
+            serializerSubcontratista.data['nombre_contacto']+' '+serializerSubcontratista.data['apellido_contacto'], #17
+            serializerSubcontratista.data['email_contacto'], #18
+            serializerSubcontratista.data['telefono_contacto'], #19
+            voucher.nombre_conductor_principal, #27
+            voucher.apellido_conductor_principal, #27
+            voucher.fecha, #4
+            voucher.hora, #5
+            voucher.patente, #20
+            serializerCamion.data['marca_camion'], #21
+            serializerCamion.data['modelo_camion'], #22
+            serializerCamion.data['color_camion'], #23
+            voucher.volumen, #24
+            serializerCamion.data['unidad_medida'], #25
+            serializerCamion.data['numero_ejes'], #26
+            str(voucher.foto_patente), #32
+            voucher.tipo_material, #13
+            voucher.punto_origen, #6
+            serializerOrigen.data['comuna'], #7
+            serializerOrigen.data['calle']+' '+str(serializerOrigen.data['numero']), #8
+            voucher.punto_suborigen, #9
+            voucher.punto_destino, #10
+            serializerDestino.data['comuna'], #11
+            serializerDestino.data['calle']+' '+str(serializerDestino.data['numero']), #12
         ]
         # Assign the data for each cell of the row 
         for col_num, cell_value in enumerate(row, 1):
@@ -583,7 +655,12 @@ def exportar_a_xlsx(request,start,end):
             cell.value = cell_value
 
 
-    # Nueva hoja de trabajo
+    ### Nueva hoja de trabajo ###
+    # despachoscamion_queryset = Voucher.objects.filter(fecha__range=(start,end)) \
+    #     .values('patente') \
+    #     .annotate(despachos_realizados=Count('patente')) \
+    #     .order_by('-despachos_realizados')
+    # print('serializerV: ', despachoscamion_queryset)
     worksheet = workbook.create_sheet(
         title='Flota Activa',
         index=2,
@@ -600,8 +677,11 @@ def exportar_a_xlsx(request,start,end):
         ('Unidad',7),
         ('Numero ejes',11),
 
-        ('Nombre conductor ppal',20),
-        ('Apellido conductor ppal',20),
+        ('Nombre conductor ppal',21),
+        ('Apellido conductor ppal',21),
+        
+        ('Despachos realizados',19), #8
+        ('Volumen total desplazado',20), #9
     ]
     row_num = 1
     # Asignar los titulos para cada celda de la cabecera
@@ -614,23 +694,25 @@ def exportar_a_xlsx(request,start,end):
         column_dimensions = worksheet.column_dimensions[column_letter]
         column_dimensions.width = column_width
     # Iterar por todos los camiones
-    for camion in camion_queryset:
+    for camion_activo in camion_queryset:
+        camion = Camion.objects.get(patente_camion=camion_activo['patente'])
         row_num += 1
-        # print("camion: ",camion)
         # Define the data for each cell in the row 
         row = [
-            str(camion.subcontratista),
-            camion.patente_camion,
-            camion.marca_camion,
-            camion.modelo_camion,
+            str(camion.subcontratista), #1
+            camion.patente_camion, #2
+            camion.marca_camion, #3
+            camion.modelo_camion, #4
 
-            camion.color_camion,
-            camion.capacidad_camion,
-            camion.unidad_medida,
-            camion.numero_ejes,
+            camion.color_camion, #4
+            camion.capacidad_camion, #5
+            camion.unidad_medida, #6
+            camion.numero_ejes, #7
 
-            camion.nombre_conductor_principal,
-            camion.apellido_conductor_principal,
+            camion.nombre_conductor_principal, #?
+            camion.apellido_conductor_principal, #?
+            camion_activo['despachos_realizados'], #8
+            int(camion_activo['despachos_realizados']) * int(camion.capacidad_camion), #9
         ]
         # Assign the data for each cell of the row 
         for col_num, cell_value in enumerate(row, 1):
