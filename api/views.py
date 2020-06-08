@@ -513,10 +513,13 @@ def exportar_a_xlsx(request,start,end):
     )
 
     voucher_queryset = Voucher.objects.filter(fecha__range=(start,end))
+    print('voucher_queryset: ', voucher_queryset)
+
     camion_queryset = Voucher.objects.filter(fecha__range=(start,end)) \
-                .values('patente') \
-                .annotate(despachos_realizados=Count('patente')) \
-                .order_by('-despachos_realizados')
+        .values('patente') \
+        .annotate(despachos_realizados=Count('patente')) \
+        .order_by('-despachos_realizados')
+    print('camion_queryset: ', camion_queryset)
     # camion_queryset = Camion.objects.all()
 
     workbook = Workbook()
@@ -695,6 +698,7 @@ def exportar_a_xlsx(request,start,end):
         column_dimensions.width = column_width
     # Iterar por todos los camiones
     for camion_activo in camion_queryset:
+        print('camion_activo: ',camion_activo)
         camion = Camion.objects.get(patente_camion=camion_activo['patente'])
         row_num += 1
         # Define the data for each cell in the row 
