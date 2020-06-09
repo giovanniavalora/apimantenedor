@@ -31,9 +31,6 @@ urlpatterns = [
     path('', include(router.urls)),
     
     path('login/', authenticate_user),
-    path('SincronizacionDescarga/', SincronizacionDescargaApiView.as_view()),
-    path('IngresarDespacho/', IngresarDespachoApiView.as_view()),
-    path('CambiarOrigen/', CambiarOrigenApiView.as_view()),
     path('FlotaSubcontratista/<int:pk>/', FlotaSubcontratista.as_view()),
     path('CodigoQRCamion/<int:pk>/', CodigoQRCamion.as_view()),
 
