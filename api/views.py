@@ -399,6 +399,8 @@ def exportar_a_xlsx(request,start,end):
     # Get active worksheet/tab
     worksheet = workbook.active
     worksheet.title = 'Registro de Salida'
+
+    print('Se ha creado la hoja de trabajo')
     # Definir los titulos por columna
     columns = [
         ('Id',5),  #1
@@ -446,6 +448,7 @@ def exportar_a_xlsx(request,start,end):
         column_letter = get_column_letter(col_num)
         column_dimensions = worksheet.column_dimensions[column_letter]
         column_dimensions.width = column_width
+    print('Se han asignado los titulos para cada celda de la cabecera')
     # Iterar por todos los vouchers
     for voucher in voucher_queryset:
         row_num += 1
@@ -461,32 +464,36 @@ def exportar_a_xlsx(request,start,end):
         if Origen.objects.filter(nombre_origen=voucher.punto_origen).exists():
             query_origen = Origen.objects.get(nombre_origen=voucher.punto_origen)
             serializerOrigen = OrigenSerializer(query_origen)
+            print('Se serializa el origen')
 
         serializerDestino=DestinoSerializer()
         if Destino.objects.filter(nombre_destino=voucher.punto_destino).exists():
             query_destino = Destino.objects.get(nombre_destino=voucher.punto_destino)
             serializerDestino = DestinoSerializer(query_destino)
+            print('Se serializa el destino')
         
         serializerSubcontratista=SubcontratistaSerializer()
         if Subcontratista.objects.filter(rut=voucher.rut_subcontratista).exists():
             query_subcontratista = Subcontratista.objects.get(rut=voucher.rut_subcontratista)
             serializerSubcontratista = SubcontratistaSerializer(query_subcontratista)
+            print('Se serializa el subcontratista')
 
         serializerCamion=CamionSerializer()
         if Camion.objects.filter(patente_camion=voucher.patente).exists():
             query_camion = Camion.objects.get(patente_camion=voucher.patente)
             serializerCamion = CamionSerializer(query_camion)
+            print('Se serializa el Camion')
 
         serializerDespachador=DespachadorSerializer()
         if Despachador.objects.filter(pk=voucher.despachador).exists():
             query_despachador = Despachador.objects.get(pk=voucher.despachador)
             serializerDespachador = DespachadorSerializer(query_despachador)
+            print('Se serializa el Despachador')
 
         
         
         # administrador = Proyecto.objects.filter(nombre_origen=despachador.proyecto, is_superuser=True)
         # Define the data for each cell in the row 
-        
         row = [
             voucher.id, #1
             str(voucher.despachador),#28 - falta apellido
@@ -524,10 +531,12 @@ def exportar_a_xlsx(request,start,end):
             serializerDestino.data['comuna'], #11
             serializerDestino.data['calle']+' '+str(serializerDestino.data['numero']), #12
         ]
-        # Assign the data for each cell of the row 
+        print('Se define la data para cada fila')
+        # Asignacion de la data para cada celda de la fila
         for col_num, cell_value in enumerate(row, 1):
             cell = worksheet.cell(row=row_num, column=col_num)
             cell.value = cell_value
+        print('Se asigna la data para cada celda de la fila')
 
 
     ### Nueva hoja de trabajo ###
@@ -540,6 +549,7 @@ def exportar_a_xlsx(request,start,end):
         title='Flota Activa',
         index=2,
     )
+    print('01')
     # Definir los titulos por columna
     columns = [
         ('Subcontratista',25),
@@ -558,6 +568,7 @@ def exportar_a_xlsx(request,start,end):
         ('Despachos realizados',19), #8
         ('Volumen total desplazado',20), #9
     ]
+    print('02')
     row_num = 1
     # Asignar los titulos para cada celda de la cabecera
     for col_num, (column_title, column_width) in enumerate(columns, 1):
@@ -569,6 +580,7 @@ def exportar_a_xlsx(request,start,end):
         column_dimensions = worksheet.column_dimensions[column_letter]
         column_dimensions.width = column_width
     # Iterar por todos los camiones
+    print('03')
     for camion_activo in camion_queryset:
         print('camion_activo: ',camion_activo)
         camion = Camion.objects.get(patente_camion=camion_activo['patente'])
@@ -594,6 +606,7 @@ def exportar_a_xlsx(request,start,end):
         for col_num, cell_value in enumerate(row, 1):
             cell = worksheet.cell(row=row_num, column=col_num)
             cell.value = cell_value
-
+    print('04')
     workbook.save(response)
+    print('05')
     return response
