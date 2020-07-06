@@ -464,31 +464,31 @@ def exportar_a_xlsx(request,start,end):
         if Origen.objects.filter(nombre_origen=voucher.punto_origen).exists():
             query_origen = Origen.objects.get(nombre_origen=voucher.punto_origen)
             serializerOrigen = OrigenSerializer(query_origen)
-            print('Se serializa el origen')
+            # print('Se serializa el origen')
 
         serializerDestino=DestinoSerializer()
         if Destino.objects.filter(nombre_destino=voucher.punto_destino).exists():
             query_destino = Destino.objects.get(nombre_destino=voucher.punto_destino)
             serializerDestino = DestinoSerializer(query_destino)
-            print('Se serializa el destino')
+            # print('Se serializa el destino')
         
         serializerSubcontratista=SubcontratistaSerializer()
         if Subcontratista.objects.filter(rut=voucher.rut_subcontratista).exists():
             query_subcontratista = Subcontratista.objects.get(rut=voucher.rut_subcontratista)
             serializerSubcontratista = SubcontratistaSerializer(query_subcontratista)
-            print('Se serializa el subcontratista')
+            # print('Se serializa el subcontratista')
 
         serializerCamion=CamionSerializer()
         if Camion.objects.filter(patente_camion=voucher.patente).exists():
             query_camion = Camion.objects.get(patente_camion=voucher.patente)
             serializerCamion = CamionSerializer(query_camion)
-            print('Se serializa el Camion')
+            # print('Se serializa el Camion')
 
         serializerDespachador=DespachadorSerializer()
         if Despachador.objects.filter(pk=voucher.despachador).exists():
             query_despachador = Despachador.objects.get(pk=voucher.despachador)
             serializerDespachador = DespachadorSerializer(query_despachador)
-            print('Se serializa el Despachador')
+            # print('Se serializa el Despachador')
 
         
         
@@ -531,12 +531,12 @@ def exportar_a_xlsx(request,start,end):
             serializerDestino.data['comuna'], #11
             serializerDestino.data['calle']+' '+str(serializerDestino.data['numero']), #12
         ]
-        print('Se define la data para cada fila')
+        # print('Se define la data para cada fila')
         # Asignacion de la data para cada celda de la fila
         for col_num, cell_value in enumerate(row, 1):
             cell = worksheet.cell(row=row_num, column=col_num)
             cell.value = cell_value
-        print('Se asigna la data para cada celda de la fila')
+        # print('Se asigna la data para cada celda de la fila')
 
 
     ### Nueva hoja de trabajo ###
@@ -602,10 +602,12 @@ def exportar_a_xlsx(request,start,end):
             camion_activo['despachos_realizados'], #8
             int(camion_activo['despachos_realizados']) * int(camion.capacidad_camion), #9
         ]
+        print('03.1')
         # Assign the data for each cell of the row 
         for col_num, cell_value in enumerate(row, 1):
             cell = worksheet.cell(row=row_num, column=col_num)
             cell.value = cell_value
+        print('03.2')
     print('04')
     workbook.save(response)
     print('05')
