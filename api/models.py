@@ -298,7 +298,8 @@ class Voucher(models.Model):
     punto_suborigen = models.CharField(max_length = 100, blank=True)
     punto_destino = models.CharField(max_length = 100)
     contador_impresiones = models.IntegerField()
-    id_qr = models.IntegerField(blank=True, null=True)
+    id_qr = models.CharField(blank=True)
     def __str__(self):
         cadena = "voucher_"+str(self.id)+" "+str(self.despachador)
         return cadena
+# voucher debiera tener las id de las otras tablas que se necesitan en el despacho
