@@ -55,7 +55,6 @@ class CodigoQRCamion(APIView):
             if CodigoQR.objects.filter(camion=pk).exists():
                 querycodigoqr = CodigoQR.objects.filter(camion=pk)
                 serializerCodigoQR = CodigoQRSerializer(querycodigoqr, many=True)
-                print("Llegue hasta aqui")
                 if CodigoQR.objects.filter(camion=pk,activo=True).exists():
                     querycodigoqractivo = querycodigoqr.get(activo=True)
                     serializerCodigoQRactivo = CodigoQRSerializer(querycodigoqractivo)
@@ -521,7 +520,7 @@ def exportar_a_xlsx(request,start,end):
             voucher.volumen, #24
             serializerCamion.data['unidad_medida'], #25
             serializerCamion.data['numero_ejes'], #26
-            str(voucher.foto_patente), #32
+            'https://ohl.faena.app/mediafiles/'+str(voucher.foto_patente), #32
             voucher.tipo_material, #13
             voucher.punto_origen, #6
             serializerOrigen.data['comuna'], #7

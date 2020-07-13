@@ -275,7 +275,7 @@ def get_upload_path_patente(instance, filename):
     now = datetime.now()
     return 'fotospatentes/{year}/{month}/{day}/user_{id_desp}/{fn}'.format(
         year=now.strftime('%Y'), month=now.strftime('%m'), day=now.strftime('%d'),
-         id_desp=instance.despachador.id, fn=filename)
+         id_desp=instance.despachador.id, fn=now)
 class Voucher(models.Model):
     despachador = models.ForeignKey(Despachador, on_delete=models.CASCADE)
     proyecto = models.CharField(max_length = 100)
