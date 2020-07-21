@@ -104,27 +104,6 @@ class FlotaSubcontratista(APIView):
             )
         
 
-# class IngresarDespachoApiView(APIView):
-#     permission_classes = (IsAuthenticated,)
-#     serializer_class = IngresarDespachoSerializer
-
-#     def post(self, request, *args, **kwargs):
-#         resp = {}
-#         serializer = self.serializer_class(data=request.data)
-#         serializer.is_valid(raise_exception=True)
-#         for objeto in serializer.data["vouchers"]:
-#             parser_classes = (MultiPartParser, FormParser)
-#             file_serializer = VoucherSerializer(data=objeto)
-#             if file_serializer.is_valid():
-#                 file_serializer.save()
-#             else:
-#                 resp['request']= False
-#                 resp['error'] = file_serializer.errors
-#                 return Response(resp, status=status.HTTP_201_CREATED)
-#         resp['request']= True
-#         resp['data'] = serializer.data
-#         return Response(resp, status=status.HTTP_201_CREATED)
-
 
 class ProyectoViewSet(viewsets.ModelViewSet):
     # permission_classes = (IsAuthenticated,)
