@@ -1,4 +1,15 @@
-version: 2
+version: 2.0
+
+workflow:
+  version: 2
+  build_deploy:
+    jobs:
+      - build
+      - deploy-master:
+        filters:
+          branches:
+            only: master
+      
 jobs:
   build:
     docker:
@@ -6,44 +17,24 @@ jobs:
     branches:
       only:
         - develop
-    working_directory: ~/apimantenedor
+    working_directory: ~/controlCamionesApi
     environment:
       PYTHONDONTWRITEBYTECODE: 1
       PYTHONUNBUFFERED: 1
     steps:
       - checkout
-      # - run: sudo apt update && apt add postgresql-dev gcc python3-dev musl-dev
-      # - run: python3 -m pip install --upgrade pip
-      # - run: pip install -r ./app/requirements.txt
-      # - run:
-      #     name: build y push Docker Images
-      #     command:
-      - run: ssh -oStrictHostKeyChecking=no -v ohl@157.245.237.33 "/home/ohl/controlCamionesApi/apimantenedor/.circleci/deploy_apimantenedor.sh"
-      # - run:
-      #     name: Deploy app a Digital Ocean
-      #     command: ssh -o StrictHostKeyChecking=no root@157.245.237.33 "/bin/bash deploy_app.sh ariv3ra/$IMAGE_NAME:$TAG"
+      - run: ssh -oStrictHostKeyChecking=no -v ohl@64.227.61.249 "/home/ohl/controlCamionesApi/apimantenedor/.circleci/deploy_app_qa.sh"
 
-  # deployment_qa:
-  #  docker:
-  #    - image: circleci/python3.7.6
-  #  working_directory: ~/apiohl
-  #  steps:
-  #    - checkout
-  #    //comprimir los archivos de la ruta de working_directory
-  #    //subir por scp a una carpeta en especifico
-  #    //descomprimir proyecto
-  #    //eliminar comprimido
-  #    //reload al contenedor de la api
-
-  # deploy_qa:
-  #   steps:
-  #     - checkout
-  #     - run:
-  #         name: Deploy master to DigitalOcean
-  #         command: git pull https://github.com/giovanniavalora/controlCamionesApi.git
-
-workflow:
-  version: 2
-  build_deploy:
-    jobs:
-      - build
+  deploy-master:
+    docker:
+      - image: circleci/python:3.7.6
+    branches:
+      only:
+        - master
+    working_directory: ~/controlCamionesApi
+    environment:
+      PYTHONDONTWRITEBYTECODE: 1
+      PYTHONUNBUFFERED: 1
+    steps:
+      - checkout
+      - run: ssh -oStrictHostKeyChecking=no -v ohl@157.245.237.33 "/home/ohl/controlCamionesApi/apimantenedor/.circleci/deploy_app_prod.sh"
