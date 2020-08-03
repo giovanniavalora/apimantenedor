@@ -120,6 +120,50 @@ class CamionViewSet(viewsets.ModelViewSet):
     queryset = Camion.objects.all()
     serializer_class = CamionSerializer
 
+class CamionxProyectoList(APIView):
+    # permission_classes = (IsAuthenticated,)
+    # permission_classes = (AllowAny,) # permitir que cualquier usuario (autenticado o no) acceda a esta URL.
+    serializer_class = DespachadorSerializer
+    def get(self, request, pk, format=None):
+        try:
+            proyecto = Proyecto.objects.get(pk=pk)
+            subcontrata = Subcontratista.objects.filter(proyecto=pk).first()
+            print("subcontrata",subcontrata.proyecto)
+            print(proyecto)
+            print(proyecto.subcontratista_set.all())
+            camiones = Camion.objects.filter(subcontratista__proyecto=pk)
+            serializer = CamionSerializer(camiones, many=True)
+            print(camiones)
+            print(serializer.data)
+            # serializer = DespachadorSerializer(despachador)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Despachador.DoesNotExist:
+            return Response({'request': False,'error':'El despachador solicitado no existe'},status=status.HTTP_400_BAD_REQUEST)
+
+    def put(self, request, pk, format=None):
+        try:
+            despachador = Despachador.objects.get(pk=pk)
+            serializer = DespachadorSerializer(despachador, data=request.data, partial=True)
+            resp={}
+            if serializer.is_valid(raise_exception=True):
+                serializer.save()
+                resp['request']= True
+                resp['data']= serializer.data
+                return Response(resp, status=status.HTTP_200_OK)
+            resp['request']= False
+            resp['data']= serializer.errors
+            return Response(resp, status=HTTP_400_BAD_REQUEST)
+        except Despachador.DoesNotExist:
+            return Response({'request': False,'error':'El Despachador solicitado no existe'},status=status.HTTP_400_BAD_REQUEST)
+    
+    def delete(self, request, pk, format=None):
+        try:
+            despachador = Despachador.objects.get(pk=pk)
+            despachador.delete()
+            return Response({'request': True,'error':'Eliminado exitosamente'},status=status.HTTP_204_NO_CONTENT)
+        except Despachador.DoesNotExist:
+            return Response({'request': False,'error':'El Despachador solicitado no existe'},status=status.HTTP_400_BAD_REQUEST)
+
 class OrigenViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAuthenticated,)
     queryset = Origen.objects.all()
@@ -175,6 +219,7 @@ class DespachadorList(APIView):
 
     def get(self, request, format=None):
         querydespachador = Despachador.objects.all()
+        print(querydespachador)
         serializer = DespachadorSerializer(querydespachador, many=True)
         return Response(serializer.data)
 
@@ -239,10 +284,18 @@ class AdministradorList(APIView):
 
     def post(self, request):
         user = request.data
+        proyectos = user['proyecto']
+        del user['proyecto']
+        
         serializer= self.serializer_class(data=user)
         resp = {}
         if serializer.is_valid(raise_exception=True):
             serializer.save() #.save llamará al metodo create del serializador cuando desee crear un objeto y al método update cuando desee actualizar.
+            admin = Administrador.objects.get(rut=user['rut'])
+            print("admin",admin)
+            for id_proyecto in proyectos:
+                admin.proyecto.add(Proyecto.objects.get(pk=id_proyecto))
+            print("admin",admin)
             resp['request']= True
             resp['data']= serializer.data
             return Response(resp, status=status.HTTP_201_CREATED)
@@ -294,8 +347,8 @@ def authenticate_user(request):
     try:
         email = request.data['email']
         password = request.data['password']
-        if Administrador.objects.filter(email=email).exists():
-            user = Administrador.objects.get(email=email)
+        if Administrador.objects.filter(email__iexact=email).exists():
+            user = Administrador.objects.get(email__iexact=email)
         else:
             res = {'request': False, 'error': 'no puede autenticarse con las credenciales dadas o la cuenta ha sido desactivada'}
             return Response(res, status=status.HTTP_403_FORBIDDEN)

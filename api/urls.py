@@ -33,12 +33,16 @@ urlpatterns = [
     path('login/', authenticate_user),
     path('FlotaSubcontratista/<int:pk>/', FlotaSubcontratista.as_view()),
     path('CodigoQRCamion/<int:pk>/', CodigoQRCamion.as_view()),
+    path('Proyecto/<int:pk>/Camion/', CamionxProyectoList.as_view()),
 
     path('Administrador/', AdministradorList.as_view()),
     path('Administrador/<int:pk>/', AdministradorDetail.as_view()),
     path('Despachador/', DespachadorList.as_view()),
     path('Despachador/<int:pk>/', DespachadorDetail.as_view()),
+    
     path('Reporte/<slug:start>/<slug:end>/', exportar_a_xlsx),
+
+    
 
     
 
