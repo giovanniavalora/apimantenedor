@@ -40,6 +40,12 @@ RUN mkdir -p /home/apimantenedor
 # create the app user
 RUN addgroup -S apimantenedor && adduser -S apimantenedor -G apimantenedor
 
+# install Timezones for alpine
+RUN apk add tzdata
+RUN cp /usr/share/zoneinfo/America/Santiago /etc/localtime
+RUN echo "America/Santiago" > /etc/timezone
+# RUN apk del tzdata
+
 # create the appropriate directories
 ENV HOME=/home/apimantenedor
 ENV APP_HOME=/home/apimantenedor/web

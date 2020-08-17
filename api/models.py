@@ -8,7 +8,7 @@ from django.db import models
 
 import pytz
 utc=pytz.UTC
-timezone.localtime(timezone.now())
+# timezone.localtime(timezone.now())
 
 
 class Proyecto(models.Model):
@@ -21,6 +21,7 @@ class Proyecto(models.Model):
     rut_mandante = models.CharField(max_length = 20)
     mandante_final = models.CharField(max_length = 100)
     cantidad_voucher_imprimir = models.IntegerField(blank=True, default=1)
+    available = models.BooleanField(default=True)
 
     def __str__(self):
         return self.centro_de_coste
@@ -35,6 +36,7 @@ class Subcontratista(models.Model):
     apellido_contacto = models.CharField(max_length = 50)
     email_contacto = models.CharField(max_length = 100, blank=True, default='')
     telefono_contacto = models.CharField(max_length = 20)
+    available = models.BooleanField(default=True)
     def __str__(self):
         return self.razon_social
 
@@ -62,7 +64,8 @@ class Camion(models.Model):
     descripcion = models.CharField(max_length = 20, blank=True)
     numero_ejes = models.CharField(max_length = 20, blank=True)
     color_camion = models.CharField(max_length = 20, blank=True)
-    foto_camion = models.FileField(upload_to=get_upload_path_camion, blank=True)
+    foto_camion = models.FileField(upload_to=get_upload_path_camion, blank=True, null=True)
+    available = models.BooleanField(default=True)
     def __str__(self):
         return self.patente_camion+" "+self.marca_camion+" "+self.modelo_camion
     class Meta:
@@ -77,6 +80,7 @@ class Origen(models.Model):
     numero = models.IntegerField(blank=True,null=True)
     latitud = models.CharField(max_length = 20)
     longitud = models.CharField(max_length = 20)
+    available = models.BooleanField(default=True)
     def __str__(self):
         return self.nombre_origen
     class Meta:
@@ -103,6 +107,7 @@ class Destino(models.Model):
     numero = models.IntegerField(blank=True,null=True)
     longitud = models.CharField(max_length = 20)
     latitud = models.CharField(max_length = 20)
+    available = models.BooleanField(default=True)
     def __str__(self):
         return str(self.id)+" "+self.nombre_destino
 
@@ -110,6 +115,7 @@ class Destino(models.Model):
 class Material(models.Model):
     destino = models.ForeignKey(Destino, on_delete=models.CASCADE)
     material = models.CharField(max_length = 100)
+    available = models.BooleanField(default=True)
     def __str__(self):
         return str(self.id)+" "+self.material
     class Meta:
@@ -145,7 +151,9 @@ class UserManager(BaseUserManager):
             with transaction.atomic():
                 user = self.model(rut=rut, **extra_fields)
                 user.set_password(password)
+                # print("proceso01")
                 user.save(using=self._db)
+                # print("proceso02")
                 return user
         except:
             raise
@@ -210,7 +218,6 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     date_joined = models.DateTimeField(default=timezone.now)
-    proyecto = models.ForeignKey(Proyecto, on_delete=models.CASCADE)
 
     objects = UserManager()
     USERNAME_FIELD = 'rut'
@@ -224,6 +231,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 class Administrador(User, PermissionsMixin):
     email = models.CharField(max_length=100, unique=True)
     cargo = models.CharField(max_length=100, blank=True)
+    proyecto = models.ManyToManyField(Proyecto, related_name='proyecto', blank=True)
     
     objects = AdminManager()
     USERNAME_FIELD = 'rut'
@@ -240,6 +248,7 @@ class Administrador(User, PermissionsMixin):
 class Despachador(User, PermissionsMixin):
     telefono = models.CharField(max_length=30, blank=True)
     origen_asignado = models.IntegerField(blank=True, null=True)
+    proyecto = models.ForeignKey(Proyecto, on_delete=models.CASCADE, blank=True)
 
     objects = DespManager()
     USERNAME_FIELD = 'rut'
