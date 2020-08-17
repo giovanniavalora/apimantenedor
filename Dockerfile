@@ -10,6 +10,9 @@ ENV PYTHONUNBUFFERED 1
 
 # install Timezones for alpine
 RUN apk add tzdata
+RUN cp /usr/share/zoneinfo/America/Santiago /etc/localtime
+RUN echo "America/Santiago" > /etc/timezone
+# RUN apk del tzdata
 
 # install psycopg2 dependencies
 RUN apk update && apk add postgresql-dev gcc python3-dev musl-dev

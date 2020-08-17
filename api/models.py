@@ -8,7 +8,7 @@ from django.db import models
 
 import pytz
 utc=pytz.UTC
-timezone.localtime(timezone.now())
+# timezone.localtime(timezone.now())
 
 
 class Proyecto(models.Model):
