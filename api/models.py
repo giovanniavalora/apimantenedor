@@ -42,7 +42,7 @@ class Subcontratista(models.Model):
 
 
 def get_upload_path_camion(instance, filename):
-    now = datetime.now()
+    now = timezone.now()
     return 'fotoscamiones/{year}/{month}/{day}/subcontratista_{id_desp}/{fn}'.format(
         year=now.strftime('%Y'), month=now.strftime('%m'), day=now.strftime('%d'),
          id_desp=instance.subcontratista.id, fn=filename)
@@ -281,10 +281,10 @@ class OrigenTemporal(models.Model):
 
 
 def get_upload_path_patente(instance, filename):
-    now = datetime.now()
-    return 'fotospatentes/{year}/{month}/{day}/user_{id_desp}/{fn}'.format(
+    now = timezone.now()
+    return 'fotospatentes/{year}/{month}/{day}/user_{id_desp}/{ahora}_{fn}'.format(
         year=now.strftime('%Y'), month=now.strftime('%m'), day=now.strftime('%d'),
-         id_desp=instance.despachador.id, fn=now)
+         id_desp=instance.despachador.id, ahora=now, fn=filename)
 class Voucher(models.Model):
     despachador = models.ForeignKey(Despachador, on_delete=models.CASCADE)
     proyecto = models.CharField(max_length = 100)
