@@ -552,7 +552,7 @@ def exportar_a_xlsx(request,start,end):
             voucher.volumen, #24
             serializerCamion.data['unidad_medida'], #25
             serializerCamion.data['numero_ejes'], #26
-            'https://qa.faena.app/mediafiles/'+str(voucher.foto_patente), #32
+            'https://ohl.faena.app/mediafiles/'+str(voucher.foto_patente), #32
             voucher.tipo_material, #13
             voucher.punto_origen, #6
             serializerOrigen.data['comuna'], #7
