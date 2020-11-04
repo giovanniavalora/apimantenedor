@@ -27,18 +27,38 @@ class Proyecto(models.Model):
         return self.centro_de_coste
 
 
+
+class Jornada(models.Model):
+    proyecto = models.ForeignKey(Proyecto, on_delete=models.CASCADE)
+    titulo_jornada = models.CharField(max_length = 100)
+    hora_inicio = models.TimeField()
+    duracion = models.IntegerField(default=12)
+    available = models.BooleanField(default=True)    
+    def __str__(self):
+        return self.titulo_jornada
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['proyecto', 'titulo_jornada'], name='Jrnd_proyecto_titulojornada')
+        ]
+
+
 class Subcontratista(models.Model):
     proyecto = models.ForeignKey(Proyecto, on_delete=models.CASCADE)
-    rut = models.CharField(max_length = 20, unique=True)
+    rut = models.CharField(max_length = 20)
     razon_social = models.CharField(max_length = 100)
     nombre_subcontratista = models.CharField(max_length = 100)
     nombre_contacto = models.CharField(max_length = 50)
     apellido_contacto = models.CharField(max_length = 50)
     email_contacto = models.CharField(max_length = 100, blank=True, default='')
-    telefono_contacto = models.CharField(max_length = 20)
+    telefono_contacto = models.CharField(max_length = 20, blank=True)
     available = models.BooleanField(default=True)
     def __str__(self):
         return self.razon_social
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['proyecto', 'rut'], name='Sbcntrtst_proyecto_rut')
+        ]
 
 
 def get_upload_path_camion(instance, filename):
@@ -52,15 +72,13 @@ class Camion(models.Model):
         ('m3','m3'),
         ('ton','ton')
     ]
+    # id = models.AutoField(primary_key=True)
     subcontratista = models.ForeignKey(Subcontratista, on_delete=models.CASCADE)
-    patente_camion = models.CharField(max_length = 20, unique=True)
+    patente_camion = models.CharField(max_length = 20)
     marca_camion = models.CharField(max_length = 20)
     modelo_camion = models.CharField(max_length = 20)
     capacidad_camion = models.CharField(max_length = 20)
     unidad_medida = models.CharField(max_length = 5, choices=UNIDADES)
-    nombre_conductor_principal = models.CharField(max_length = 50)
-    apellido_conductor_principal = models.CharField(max_length = 50)
-    telefono_conductor_principal = models.CharField(max_length = 20)
     descripcion = models.CharField(max_length = 20, blank=True)
     numero_ejes = models.CharField(max_length = 20, blank=True)
     color_camion = models.CharField(max_length = 20, blank=True)
@@ -70,6 +88,26 @@ class Camion(models.Model):
         return self.patente_camion+" "+self.marca_camion+" "+self.modelo_camion
     class Meta:
         verbose_name_plural = "Camiones"
+        constraints = [
+            models.UniqueConstraint(fields=['subcontratista', 'patente_camion'], name='Cmn_subcontratista_patente')
+        ]
+
+class Conductor(models.Model):
+    subcontratista = models.ForeignKey(Subcontratista, on_delete=models.CASCADE)
+    camion = models.ManyToManyField(Camion, blank=True)
+    nombre = models.CharField(max_length = 30)
+    apellido = models.CharField(max_length = 30)
+    rut = models.CharField(max_length = 20)
+    telefono = models.CharField(max_length=30, blank=True)
+    email = models.CharField(max_length = 100, blank=True, default='')
+    available = models.BooleanField(default=True)
+    def __str__(self):
+        return self.nombre+" "+self.apellido
+    class Meta:
+        verbose_name_plural = "Conductores"
+        constraints = [
+            models.UniqueConstraint(fields=['subcontratista','rut'], name='Cndctr_subcontratista_camion')
+        ]
 
 
 class Origen(models.Model):
@@ -213,11 +251,13 @@ class DespManager(BaseUserManager):
 
 class User(AbstractBaseUser, PermissionsMixin):
     rut = models.CharField(max_length=15, unique=True) 
+    # proyecto = models.ManyToManyField(Proyecto, related_name='proyecto', blank=True)
     nombre = models.CharField(max_length=30)
     apellido = models.CharField(max_length=30)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     date_joined = models.DateTimeField(default=timezone.now)
+
 
     objects = UserManager()
     USERNAME_FIELD = 'rut'
@@ -231,7 +271,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 class Administrador(User, PermissionsMixin):
     email = models.CharField(max_length=100, unique=True)
     cargo = models.CharField(max_length=100, blank=True)
-    proyecto = models.ManyToManyField(Proyecto, related_name='proyecto', blank=True)
+    proyecto_admin = models.ManyToManyField(Proyecto, related_name='proyecto_admin', blank=True)
     
     objects = AdminManager()
     USERNAME_FIELD = 'rut'
@@ -245,10 +285,12 @@ class Administrador(User, PermissionsMixin):
     class Meta:
         verbose_name_plural = "Administradores"
 
+
 class Despachador(User, PermissionsMixin):
+    # rut_despachador = User.rut
     telefono = models.CharField(max_length=30, blank=True)
     origen_asignado = models.IntegerField(blank=True, null=True)
-    proyecto = models.ForeignKey(Proyecto, on_delete=models.CASCADE, blank=True)
+    proyecto_desp = models.ManyToManyField(Proyecto, related_name='proyecto_desp', blank=True)
 
     objects = DespManager()
     USERNAME_FIELD = 'rut'
@@ -260,8 +302,35 @@ class Despachador(User, PermissionsMixin):
     #     return self
     class Meta:
         verbose_name_plural = "Despachadores"
+        # constraints = [
+        #     models.UniqueConstraint(fields=['proyecto', 'rut'], name='Dspchdr_proyecto_rut')
+        # ]
 ##### fin usuarios #####
 
+
+
+# # class Despachador(models.Model):
+# #     rut = models.CharField(max_length=15, unique=true) 
+# #     nombre = models.CharField(max_length=30)
+# #     apellido = models.CharField(max_length=30)
+# #     password = models.CharField(max_length=100)
+
+# #     is_active = models.BooleanField(default=True)
+# #     is_staff = models.BooleanField(default=False)
+# #     date_joined = models.DateTimeField(default=timezone.now)
+
+# #     telefono = models.CharField(max_length=30, blank=True)
+# #     origen_asignado = models.IntegerField(blank=True, null=True)
+# #     proyecto = models.ForeignKey(Proyecto, on_delete=models.CASCADE, blank=True)
+
+# #     objects = DespManager()
+# #     USERNAME_FIELD = 'rut'
+# #     REQUIRED_FIELDS = ['nombre', 'apellido']
+# #     def __str__(self):
+# #         return self.rut
+# #     def save(self, *args, **kwargs):
+# #         super(User, self).save(*args, **kwargs)
+# #         return self
 
 
 
@@ -287,28 +356,71 @@ def get_upload_path_patente(instance, filename):
          id_desp=instance.despachador.id, ahora=now, fn=filename)
 class Voucher(models.Model):
     despachador = models.ForeignKey(Despachador, on_delete=models.CASCADE)
+    jornada = models.ForeignKey(Jornada, on_delete=models.CASCADE)
+    
+    rut_despachador = models.CharField(max_length=15)
+    nombre_despachador = models.CharField(max_length=30)
+    apellido_despachador = models.CharField(max_length=30)
+    telefono_despachador = models.CharField(max_length=30, blank=True)
+    
+    # id_proyecto = models.CharField(max_length = 255, blank=True)
     proyecto = models.CharField(max_length = 100)
     nombre_cliente = models.CharField(max_length = 100)
     rut_cliente = models.CharField(max_length = 20)
-    nombre_subcontratista = models.CharField(max_length = 100)
+
+    # id_subcontratista = models.CharField(max_length = 255, blank=True)
     rut_subcontratista = models.CharField(max_length = 20)
-    nombre_conductor_principal = models.CharField(max_length = 50)
-    apellido_conductor_principal = models.CharField(max_length = 50)
+    nombre_subcontratista = models.CharField(max_length = 100)
+    razon_social_subcontratista = models.CharField(max_length = 100)
+    nombre_contacto_subcontratista = models.CharField(max_length = 50)
+    apellido_contacto_subcontratista = models.CharField(max_length = 50)
+    email_contacto_subcontratista = models.CharField(max_length = 100, blank=True, default='')
+    telefono_contacto_subcontratista = models.CharField(max_length = 20, blank=True)
+
+    # id_conductor = models.CharField(max_length = 255, blank=True)
+    rut_conductor = models.CharField(max_length = 20)
+    nombre_conductor = models.CharField(max_length = 30)
+    apellido_conductor = models.CharField(max_length = 30)
+
+    # id_camion = models.CharField(max_length = 255, blank=True)
+    patente_camion = models.CharField(max_length = 20)
+    marca_camion = models.CharField(max_length = 20)
+    modelo_camion = models.CharField(max_length = 20)
+    capacidad_camion = models.CharField(max_length = 20)
+    unidad_medida = models.CharField(max_length = 5)
+    descripcion = models.CharField(max_length = 20, blank=True)
+    numero_ejes = models.CharField(max_length = 20, blank=True)
+    color_camion = models.CharField(max_length = 20, blank=True)
+    foto_patente = models.FileField(upload_to=get_upload_path_patente)
+    # foto_patente = models.FileField(upload_to='fotospatentes/%Y/%m/%d/', blank=True)
+
+    tipo_material = models.CharField(max_length = 50)
+
+    # id_origen = models.CharField(max_length = 255, blank=True)
+    nombre_origen = models.CharField(max_length = 100)
+    comuna_origen = models.CharField(max_length = 50,blank=True)
+    calle_origen = models.CharField(max_length = 50,blank=True)
+    numero_origen = models.IntegerField(blank=True,null=True)
+
+    nombre_suborigen = models.CharField(max_length = 100, blank=True)
+
+    # id_destino = models.CharField(max_length = 255, blank=True)
+    nombre_destino = models.CharField(max_length = 100)
+    comuna_destino = models.CharField(max_length = 50,blank=True)
+    calle_destino = models.CharField(max_length = 50,blank=True)
+    numero_destino = models.IntegerField(blank=True,null=True)
+    
     fecha_servidor = models.DateField(auto_now_add=True)
     hora_servidor = models.TimeField(auto_now_add=True)
     fecha = models.DateField()
     hora = models.TimeField()
-    patente = models.CharField(max_length = 20)
-    foto_patente = models.FileField(upload_to=get_upload_path_patente)
-    # foto_patente = models.FileField(upload_to='fotospatentes/%Y/%m/%d/', blank=True)
-    volumen = models.CharField(max_length = 20)
-    tipo_material = models.CharField(max_length = 50)
-    punto_origen = models.CharField(max_length = 100)
-    punto_suborigen = models.CharField(max_length = 100, blank=True)
-    punto_destino = models.CharField(max_length = 100)
     contador_impresiones = models.IntegerField()
-    id_qr = models.CharField(max_length = 255, blank=True)
+    id_qr = models.CharField(max_length = 255, blank=True) #para validar si es un qr escaneado es válido o no
+    id_ticket_reemplazado = models.CharField(max_length = 255, blank=True)
+    available = models.BooleanField(default=True)
+    # despachos realizados (cantidad)
+    # Volumen_total_desplazado_a_la_fecha
+
     def __str__(self):
         cadena = "voucher_"+str(self.id)+" "+str(self.despachador)
         return cadena
-# voucher debiera tener las id de las otras tablas que se necesitan en el despacho
