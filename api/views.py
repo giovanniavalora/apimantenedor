@@ -109,6 +109,11 @@ class ProyectoViewSet(viewsets.ModelViewSet):
     # permission_classes = (IsAuthenticated,)
     queryset = Proyecto.objects.all()
     serializer_class = ProyectoSerializer
+    
+class JornadaViewSet(viewsets.ModelViewSet):
+    # permission_classes = (IsAuthenticated,)
+    queryset = Jornada.objects.all()
+    serializer_class = JornadaSerializer
 
 class SubcontratistaViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAuthenticated,)
@@ -119,6 +124,11 @@ class CamionViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAuthenticated,)
     queryset = Camion.objects.all()
     serializer_class = CamionSerializer
+
+class ConductorViewSet(viewsets.ModelViewSet):
+    # permission_classes = (IsAuthenticated,)
+    queryset = Conductor.objects.all()
+    serializer_class = ConductorSerializer
 
 class CamionxProyectoList(APIView):
     # permission_classes = (IsAuthenticated,)
@@ -226,9 +236,19 @@ class DespachadorList(APIView):
     def post(self, request):
         user = request.data
         serializer= DespachadorSerializer(data=user)
+
+        proyectos = user['proyecto']
+        del user['proyecto']
+
+        # print("serializer.data: ", serializer.data)
         resp = {}
         if serializer.is_valid(raise_exception=True):
             serializer.save() #.save llamará al metodo create del serializador cuando desee crear un objeto y al método update cuando desee actualizar.
+            
+            desp = Despachador.objects.get(rut=user['rut'])
+            for id_proyecto in proyectos:
+                desp.proyecto_desp.add(Proyecto.objects.get(pk=id_proyecto))#Aquí podría haber un error
+            
             resp['request']= True
             resp['data']= serializer.data
             return Response(resp, status=status.HTTP_201_CREATED)
@@ -251,10 +271,15 @@ class DespachadorDetail(APIView):
     def put(self, request, pk, format=None):
         try:
             despachador = Despachador.objects.get(pk=pk)
+            proyectos = request.data['proyecto']
             serializer = DespachadorSerializer(despachador, data=request.data, partial=True)
+            
             resp={}
             if serializer.is_valid(raise_exception=True):
                 serializer.save()
+                # despachador.proyecto_desp.all().delete()
+                # for id_proyecto in proyectos:
+                #     despachador.proyecto_desp.add(Proyecto.objects.get(pk=id_proyecto))
                 resp['request']= True
                 resp['data']= serializer.data
                 return Response(resp, status=status.HTTP_200_OK)
@@ -288,14 +313,15 @@ class AdministradorList(APIView):
         del user['proyecto']
         
         serializer= self.serializer_class(data=user)
+        
         resp = {}
         if serializer.is_valid(raise_exception=True):
             serializer.save() #.save llamará al metodo create del serializador cuando desee crear un objeto y al método update cuando desee actualizar.
             admin = Administrador.objects.get(rut=user['rut'])
-            print("admin",admin)
+            
             for id_proyecto in proyectos:
-                admin.proyecto.add(Proyecto.objects.get(pk=id_proyecto))
-            print("admin",admin)
+                admin.proyecto_admin.add(Proyecto.objects.get(pk=id_proyecto))
+            
             resp['request']= True
             resp['data']= serializer.data
             return Response(resp, status=status.HTTP_201_CREATED)
@@ -318,7 +344,7 @@ class AdministradorDetail(APIView):
     def put(self, request, pk, format=None):
         try:
             query = Administrador.objects.get(pk=pk)
-            serializer = DespachadorSerializer(query, data=request.data, partial=True)
+            serializer = AdministradorSerializer(query, data=request.data, partial=True)
             resp={}
             if serializer.is_valid(raise_exception=True):
                 serializer.save()
@@ -349,6 +375,7 @@ def authenticate_user(request):
         password = request.data['password']
         if Administrador.objects.filter(email__iexact=email).exists():
             user = Administrador.objects.get(email__iexact=email)
+            print(user)
         else:
             res = {'request': False, 'error': 'no puede autenticarse con las credenciales dadas o la cuenta ha sido desactivada'}
             return Response(res, status=status.HTTP_403_FORBIDDEN)
@@ -552,7 +579,7 @@ def exportar_a_xlsx(request,start,end):
             voucher.volumen, #24
             serializerCamion.data['unidad_medida'], #25
             serializerCamion.data['numero_ejes'], #26
-            'https://qa.faena.app/mediafiles/'+str(voucher.foto_patente), #32
+            'https://ohl.faena.app/mediafiles/'+str(voucher.foto_patente), #32
             voucher.tipo_material, #13
             voucher.punto_origen, #6
             serializerOrigen.data['comuna'], #7
