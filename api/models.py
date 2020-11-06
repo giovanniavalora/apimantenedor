@@ -356,15 +356,15 @@ def get_upload_path_patente(instance, filename):
          id_desp=instance.despachador.id, ahora=now, fn=filename)
 class Voucher(models.Model):
     despachador = models.ForeignKey(Despachador, on_delete=models.CASCADE)
-    jornada = models.ForeignKey(Jornada, on_delete=models.CASCADE)
+    jornada = models.ForeignKey(Jornada, on_delete=models.CASCADE,blank=True,null=True)
     
     rut_despachador = models.CharField(max_length=15)
     nombre_despachador = models.CharField(max_length=30)
     apellido_despachador = models.CharField(max_length=30)
     telefono_despachador = models.CharField(max_length=30, blank=True)
     
-    # id_proyecto = models.CharField(max_length = 255, blank=True)
-    proyecto = models.CharField(max_length = 100)
+    id_proyecto = models.CharField(max_length = 255, blank=True)
+    proyecto = models.CharField(max_length = 100) #nombre del proyecto
     nombre_cliente = models.CharField(max_length = 100)
     rut_cliente = models.CharField(max_length = 20)
 
@@ -414,7 +414,7 @@ class Voucher(models.Model):
     hora_servidor = models.TimeField(auto_now_add=True)
     fecha = models.DateField()
     hora = models.TimeField()
-    contador_impresiones = models.IntegerField()
+    contador_impresiones = models.IntegerField(blank=True,null=True)
     id_qr = models.CharField(max_length = 255, blank=True) #para validar si es un qr escaneado es válido o no
     id_ticket_reemplazado = models.CharField(max_length = 255, blank=True)
     available = models.BooleanField(default=True)
@@ -422,5 +422,5 @@ class Voucher(models.Model):
     # Volumen_total_desplazado_a_la_fecha
 
     def __str__(self):
-        cadena = "voucher_"+str(self.id)+" "+str(self.despachador)
+        cadena = "voucher_"+str(self.id)+":"+str(self.despachador)
         return cadena

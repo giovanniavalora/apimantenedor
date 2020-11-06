@@ -72,7 +72,7 @@ class DespachadorSerializer(serializers.ModelSerializer):
         instance.nombre = validated_data.get('nombre', instance.nombre)
         instance.apellido = validated_data.get('apellido', instance.apellido)
         instance.is_active = validated_data.get('is_active', instance.is_active)
-        # instance.proyecto_desp = validated_data.get('proyecto_desp', instance.proyecto_desp)
+        instance.proyecto_desp = validated_data.get('proyecto_desp', instance.proyecto_desp)
         # instance.rut_despachador = validated_data.get('rut_despachador', instance.rut_despachador)
         # instance.proyecto = validated_data.get('created', instance.proyecto)
         instance.save()

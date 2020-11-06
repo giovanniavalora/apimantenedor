@@ -344,7 +344,7 @@ class AdministradorDetail(APIView):
     def put(self, request, pk, format=None):
         try:
             query = Administrador.objects.get(pk=pk)
-            serializer = DespachadorSerializer(query, data=request.data, partial=True)
+            serializer = AdministradorSerializer(query, data=request.data, partial=True)
             resp={}
             if serializer.is_valid(raise_exception=True):
                 serializer.save()
