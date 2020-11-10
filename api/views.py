@@ -444,8 +444,10 @@ def exportar_a_xlsx(request,start,end):
     print('voucher_queryset: ', voucher_queryset)
 
     camion_queryset = Voucher.objects.filter(fecha__range=(start,end)) \
-        .values('patente') \
-        .annotate(despachos_realizados=Count('patente')) \
+        .values('nombre_subcontratista','patente_camion','marca_camion','modelo_camion',
+        'color_camion','capacidad_camion','unidad_medida','numero_ejes','nombre_conductor',
+        'apellido_conductor') \
+        .annotate(despachos_realizados=Count('patente_camion')) \
         .order_by('-despachos_realizados')
     print('camion_queryset: ', camion_queryset)
     # camion_queryset = Camion.objects.all()
@@ -473,8 +475,8 @@ def exportar_a_xlsx(request,start,end):
         ('Contacto subcontratista',20), #17
         ('Email subcontratista',20), #18
         ('Teléfono subcontratista',20), #19
-        ('Nombre conductor principal',20), #27
-        ('Apellido conductor principal',20), #27
+        ('Nombre conductor',20), #27
+        ('Apellido conductor',20), #27
         ('Fecha',11), #4
         ('Hora',8), #5
         ('Patente',8), #20
@@ -505,28 +507,21 @@ def exportar_a_xlsx(request,start,end):
         column_dimensions = worksheet.column_dimensions[column_letter]
         column_dimensions.width = column_width
     print('Se han asignado los titulos para cada celda de la cabecera')
-    # Iterar por todos los vouchers
+    # Iterar por todos los vouchers filtrados por fecha
     for voucher in voucher_queryset:
         row_num += 1
-        # print("voucher.algo: ", Origen.objects.get(nombre_origen=voucher.punto_origen))
-        
-        # query_origen = Origen.objects.get(nombre_origen=voucher.punto_origen)
-        # serializerOrigen = OrigenSerializer(query_origen)
-        # print("query_origen: ", query_origen)
-        # print("query_origen2: ", serializerOrigen)
 
+        # serializerOrigen=OrigenSerializer()
+        # if Origen.objects.filter(nombre_origen=voucher.nombre_origen).exists():
+        #     query_origen = Origen.objects.get(nombre_origen=voucher.nombre_origen)
+        #     serializerOrigen = OrigenSerializer(query_origen)
+        #     # print('Se serializa el origen')
 
-        serializerOrigen=OrigenSerializer()
-        if Origen.objects.filter(nombre_origen=voucher.punto_origen).exists():
-            query_origen = Origen.objects.get(nombre_origen=voucher.punto_origen)
-            serializerOrigen = OrigenSerializer(query_origen)
-            # print('Se serializa el origen')
-
-        serializerDestino=DestinoSerializer()
-        if Destino.objects.filter(nombre_destino=voucher.punto_destino).exists():
-            query_destino = Destino.objects.get(nombre_destino=voucher.punto_destino)
-            serializerDestino = DestinoSerializer(query_destino)
-            # print('Se serializa el destino')
+        # serializerDestino=DestinoSerializer()
+        # if Destino.objects.filter(nombre_destino=voucher.punto_destino).exists():
+        #     query_destino = Destino.objects.get(nombre_destino=voucher.punto_destino)
+        #     serializerDestino = DestinoSerializer(query_destino)
+        #     # print('Se serializa el destino')
         
         serializerSubcontratista=SubcontratistaSerializer()
         if Subcontratista.objects.filter(rut=voucher.rut_subcontratista).exists():
@@ -535,8 +530,8 @@ def exportar_a_xlsx(request,start,end):
             # print('Se serializa el subcontratista')
 
         serializerCamion=CamionSerializer()
-        if Camion.objects.filter(patente_camion=voucher.patente).exists():
-            query_camion = Camion.objects.get(patente_camion=voucher.patente)
+        if Camion.objects.filter(patente_camion=voucher.patente_camion).exists():
+            query_camion = Camion.objects.get(patente_camion=voucher.patente_camion)
             serializerCamion = CamionSerializer(query_camion)
             # print('Se serializa el Camion')
 
@@ -556,7 +551,7 @@ def exportar_a_xlsx(request,start,end):
             serializerDespachador.data['rut'], #29
             serializerDespachador.data['telefono'], #30
             # voucher.proyecto,
-            str(Proyecto.objects.get(id=voucher.proyecto)),#2
+            str(Proyecto.objects.get(id=voucher.id_proyecto)),#2
             voucher.contador_impresiones, #3
             voucher.nombre_cliente, #no va?
             voucher.rut_cliente, #no va?
@@ -566,26 +561,26 @@ def exportar_a_xlsx(request,start,end):
             serializerSubcontratista.data['nombre_contacto']+' '+serializerSubcontratista.data['apellido_contacto'], #17
             serializerSubcontratista.data['email_contacto'], #18
             serializerSubcontratista.data['telefono_contacto'], #19
-            voucher.nombre_conductor_principal, #27
-            voucher.apellido_conductor_principal, #27
+            voucher.nombre_conductor, #27
+            voucher.apellido_conductor, #27
             voucher.fecha, #4
             voucher.hora, #5
-            voucher.patente, #20
-            serializerCamion.data['marca_camion'], #21
-            serializerCamion.data['modelo_camion'], #22
-            serializerCamion.data['color_camion'], #23
-            voucher.volumen, #24
-            serializerCamion.data['unidad_medida'], #25
-            serializerCamion.data['numero_ejes'], #26
+            voucher.patente_camion, #20
+            voucher.marca_camion, #21
+            voucher.modelo_camion, #22
+            voucher.color_camion, #23
+            voucher.capacidad_camion, #24
+            voucher.unidad_medida, #25
+            voucher.numero_ejes, #26
             'https://ohl.faena.app/mediafiles/'+str(voucher.foto_patente), #32
             voucher.tipo_material, #13
-            voucher.punto_origen, #6
-            serializerOrigen.data['comuna'], #7
-            serializerOrigen.data['calle']+' '+str(serializerOrigen.data['numero']), #8
-            voucher.punto_suborigen, #9
-            voucher.punto_destino, #10
-            serializerDestino.data['comuna'], #11
-            serializerDestino.data['calle']+' '+str(serializerDestino.data['numero']), #12
+            voucher.nombre_origen, #6
+            voucher.comuna_origen, #7
+            voucher.calle_origen+' '+str(voucher.numero_origen), #8
+            voucher.nombre_suborigen, #9
+            voucher.nombre_destino, #10
+            voucher.comuna_destino, #11
+            voucher.calle_destino+' '+str(voucher.numero_destino), #12
         ]
         # print('Se define la data para cada fila')
         # Asignacion de la data para cada celda de la fila
@@ -635,36 +630,50 @@ def exportar_a_xlsx(request,start,end):
         column_letter = get_column_letter(col_num)
         column_dimensions = worksheet.column_dimensions[column_letter]
         column_dimensions.width = column_width
-    # Iterar por todos los camiones
-    print('03')
+
+    # Iterar por info de camiones existente en
     for camion_activo in camion_queryset:
         print('camion_activo: ',camion_activo)
-        camion = Camion.objects.get(patente_camion=camion_activo['patente'])
+        # camion = Camion.objects.get(patente_camion=camion_activo['patente_camion'])
         row_num += 1
         # Define the data for each cell in the row 
         row = [
-            str(camion.subcontratista), #1
-            camion.patente_camion, #2
-            camion.marca_camion, #3
-            camion.modelo_camion, #4
+            camion_activo['nombre_subcontratista'], #1
+            camion_activo['patente_camion'], #2
+            camion_activo['marca_camion'], #3
+            camion_activo['modelo_camion'], #4
 
-            camion.color_camion, #4
-            camion.capacidad_camion, #5
-            camion.unidad_medida, #6
-            camion.numero_ejes, #7
+            camion_activo['color_camion'], #4
+            camion_activo['capacidad_camion'], #5
+            camion_activo['unidad_medida'], #6
+            camion_activo['numero_ejes'], #7
 
-            camion.nombre_conductor_principal, #?
-            camion.apellido_conductor_principal, #?
+            camion_activo['nombre_conductor'], #?
+            camion_activo['apellido_conductor'], #?
             camion_activo['despachos_realizados'], #8
-            int(camion_activo['despachos_realizados']) * int(camion.capacidad_camion), #9
+            int(camion_activo['despachos_realizados']) * int(camion_activo['capacidad_camion']), #9
         ]
-        print('03.1')
+        # row = [
+        #     camion_activo.nombre_subcontratista, #1
+        #     camion_activo.patente_camion, #2
+        #     camion_activo.marca_camion, #3
+        #     camion_activo.modelo_camion, #4
+
+        #     camion_activo.color_camion, #4
+        #     camion_activo.capacidad_camion, #5
+        #     camion_activo.unidad_medida, #6
+        #     camion_activo.numero_ejes, #7
+
+        #     camion_activo.nombre_conductor, #?
+        #     camion_activo.apellido_conductor, #?
+        #     camion_activo.despachos_realizados, #8
+        #     int(camion_activo.despachos_realizados) * int(camion_activo.capacidad_camion), #9
+        # ]
+
         # Assign the data for each cell of the row 
         for col_num, cell_value in enumerate(row, 1):
             cell = worksheet.cell(row=row_num, column=col_num)
             cell.value = cell_value
-        print('03.2')
-    print('04')
+            
     workbook.save(response)
-    print('05')
     return response
