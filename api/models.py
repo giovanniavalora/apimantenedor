@@ -308,33 +308,6 @@ class Despachador(User, PermissionsMixin):
 ##### fin usuarios #####
 
 
-
-# # class Despachador(models.Model):
-# #     rut = models.CharField(max_length=15, unique=true) 
-# #     nombre = models.CharField(max_length=30)
-# #     apellido = models.CharField(max_length=30)
-# #     password = models.CharField(max_length=100)
-
-# #     is_active = models.BooleanField(default=True)
-# #     is_staff = models.BooleanField(default=False)
-# #     date_joined = models.DateTimeField(default=timezone.now)
-
-# #     telefono = models.CharField(max_length=30, blank=True)
-# #     origen_asignado = models.IntegerField(blank=True, null=True)
-# #     proyecto = models.ForeignKey(Proyecto, on_delete=models.CASCADE, blank=True)
-
-# #     objects = DespManager()
-# #     USERNAME_FIELD = 'rut'
-# #     REQUIRED_FIELDS = ['nombre', 'apellido']
-# #     def __str__(self):
-# #         return self.rut
-# #     def save(self, *args, **kwargs):
-# #         super(User, self).save(*args, **kwargs)
-# #         return self
-
-
-
-
 def fin_origen_temporal():
     return timezone.now() + timezone.timedelta(hours=12)
 class OrigenTemporal(models.Model):

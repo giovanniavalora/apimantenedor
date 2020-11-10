@@ -102,8 +102,64 @@ class FlotaSubcontratista(APIView):
                 }, 
                 status=status.HTTP_400_BAD_REQUEST
             )
-        
 
+class CamionxProyectoList(APIView):
+    # permission_classes = (IsAuthenticated,)
+    # permission_classes = (AllowAny,) # permitir que cualquier usuario (autenticado o no) acceda a esta URL.
+    # serializer_class = DespachadorSerializer
+    def get(self, request, pk, format=None):
+        try:
+            proyecto = Proyecto.objects.get(pk=pk)
+            subcontrata = Subcontratista.objects.filter(proyecto=pk).first()
+            print("subcontrata",subcontrata.proyecto)
+            print(proyecto)
+            print(proyecto.subcontratista_set.all())
+            camiones = Camion.objects.filter(subcontratista__proyecto=pk)
+            serializer = CamionSerializer(camiones, many=True)
+            print(camiones)
+            print(serializer.data)
+            # serializer = DespachadorSerializer(despachador)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Despachador.DoesNotExist:
+            return Response({'request': False,'error':'El despachador solicitado no existe'},status=status.HTTP_400_BAD_REQUEST)
+
+
+class ConductorxProyectoList(APIView):
+    # permission_classes = (IsAuthenticated,)
+    # permission_classes = (AllowAny,) # permitir que cualquier usuario (autenticado o no) acceda a esta URL.
+    serializer_class = ConductorSerializer
+    def get(self, request, pk, format=None):
+        try:
+            proyecto = Proyecto.objects.get(pk=pk)
+            subcontrata = Subcontratista.objects.filter(proyecto=pk).first()
+            print("subcontrata",subcontrata.proyecto)
+            print(proyecto)
+            print(proyecto.subcontratista_set.all())
+            conductores = Conductor.objects.filter(subcontratista__proyecto=pk)
+            serializer = ConductorSerializer(conductores, many=True)
+            print(conductores)
+            print(serializer.data)
+            # serializer = DespachadorSerializer(despachador)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Despachador.DoesNotExist:
+            return Response({'request': False,'error':'El despachador solicitado no existe'},status=status.HTTP_400_BAD_REQUEST)
+
+
+#Es Similar a FlotaSubcontratista
+class CamionxSubcontratistaList(APIView):
+    # permission_classes = (IsAuthenticated,)
+    # permission_classes = (AllowAny,) # permitir que cualquier usuario (autenticado o no) acceda a esta URL.
+    # serializer_class = DespachadorSerializer
+    def get(self, request, pk, format=None):
+        try:
+            camiones = Camion.objects.filter(subcontratista=pk)
+            serializer = CamionSerializer(camiones, many=True)
+            print(camiones)
+            print(serializer.data)
+            # serializer = DespachadorSerializer(despachador)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Despachador.DoesNotExist:
+            return Response({'request': False,'error':'El despachador solicitado no existe'},status=status.HTTP_400_BAD_REQUEST)
 
 class ProyectoViewSet(viewsets.ModelViewSet):
     # permission_classes = (IsAuthenticated,)
@@ -129,50 +185,6 @@ class ConductorViewSet(viewsets.ModelViewSet):
     # permission_classes = (IsAuthenticated,)
     queryset = Conductor.objects.all()
     serializer_class = ConductorSerializer
-
-class CamionxProyectoList(APIView):
-    # permission_classes = (IsAuthenticated,)
-    # permission_classes = (AllowAny,) # permitir que cualquier usuario (autenticado o no) acceda a esta URL.
-    serializer_class = DespachadorSerializer
-    def get(self, request, pk, format=None):
-        try:
-            proyecto = Proyecto.objects.get(pk=pk)
-            subcontrata = Subcontratista.objects.filter(proyecto=pk).first()
-            print("subcontrata",subcontrata.proyecto)
-            print(proyecto)
-            print(proyecto.subcontratista_set.all())
-            camiones = Camion.objects.filter(subcontratista__proyecto=pk)
-            serializer = CamionSerializer(camiones, many=True)
-            print(camiones)
-            print(serializer.data)
-            # serializer = DespachadorSerializer(despachador)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        except Despachador.DoesNotExist:
-            return Response({'request': False,'error':'El despachador solicitado no existe'},status=status.HTTP_400_BAD_REQUEST)
-
-    def put(self, request, pk, format=None):
-        try:
-            despachador = Despachador.objects.get(pk=pk)
-            serializer = DespachadorSerializer(despachador, data=request.data, partial=True)
-            resp={}
-            if serializer.is_valid(raise_exception=True):
-                serializer.save()
-                resp['request']= True
-                resp['data']= serializer.data
-                return Response(resp, status=status.HTTP_200_OK)
-            resp['request']= False
-            resp['data']= serializer.errors
-            return Response(resp, status=HTTP_400_BAD_REQUEST)
-        except Despachador.DoesNotExist:
-            return Response({'request': False,'error':'El Despachador solicitado no existe'},status=status.HTTP_400_BAD_REQUEST)
-    
-    def delete(self, request, pk, format=None):
-        try:
-            despachador = Despachador.objects.get(pk=pk)
-            despachador.delete()
-            return Response({'request': True,'error':'Eliminado exitosamente'},status=status.HTTP_204_NO_CONTENT)
-        except Despachador.DoesNotExist:
-            return Response({'request': False,'error':'El Despachador solicitado no existe'},status=status.HTTP_400_BAD_REQUEST)
 
 class OrigenViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAuthenticated,)
@@ -208,20 +220,6 @@ class VoucherViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAuthenticated,)
     queryset = Voucher.objects.all()
     serializer_class = VoucherSerializer
-
-
-# Registra un nuevo usuario General (ni despachador ni administrador)
-# class CreateUserAPIView(APIView):
-#     # permission_classes = (IsAuthenticated,)
-#     permission_classes = (AllowAny,) # permitir que cualquier usuario (autenticado o no) acceda a esta URL.
-#     def post(self, request):
-#         user = request.data
-#         print(user)
-#         serializer = UserSerializer(data=user)
-#         serializer.is_valid(raise_exception=True)
-#         serializer.save()
-#         return Response(serializer.data, status=status.HTTP_201_CREATED)
-
 
 class DespachadorList(APIView):
     permission_classes = (IsAuthenticated,)
