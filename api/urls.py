@@ -36,6 +36,8 @@ urlpatterns = [
     path('FlotaSubcontratista/<int:pk>/', FlotaSubcontratista.as_view()),
     path('CodigoQRCamion/<int:pk>/', CodigoQRCamion.as_view()),
     path('Proyecto/<int:pk>/Camion/', CamionxProyectoList.as_view()),
+    path('Proyecto/<int:pk>/Conductor/', ConductorxProyectoList.as_view()),
+    path('Subcontratista/<int:pk>/Camion/', CamionxSubcontratistaList.as_view()),
 
     path('Administrador/', AdministradorList.as_view()),
     path('Administrador/<int:pk>/', AdministradorDetail.as_view()),

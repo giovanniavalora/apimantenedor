@@ -28,7 +28,6 @@ class UserSerializer(serializers.ModelSerializer):
         instance.nombre = validated_data.get('nombre', instance.nombre)
         instance.apellido = validated_data.get('apellido', instance.apellido)
         instance.is_active = validated_data.get('is_active', instance.is_active)
-        instance.proyecto_id = validated_data.get('proyecto_id', instance.proyecto_id)
         instance.save()
         return instance
 
@@ -133,15 +132,6 @@ class VoucherSerializer(serializers.ModelSerializer):
     class Meta:
         model = Voucher
         fields = '__all__'
-
-
-##### Serializers del servicio Ingresar Despacho
-class IngresarDespachoSerializer(serializers.Serializer):
-    vouchers = VoucherSerializer(many=True)
-    # class Meta:
-    #     model = Voucher
-    #     fields = '__all__'
-
 
 
 ##### Serializers anidados para el servicio Sincronización Descarga
