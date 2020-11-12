@@ -27,9 +27,6 @@ from .serializers import *
 from .models import *
 from django.db.models import Count
 
-from django.core.mail import EmailMultiAlternatives
-import smtplib
-
 from django.utils import timezone
 import pytz
 # utc=pytz.UTC
@@ -41,6 +38,58 @@ from openpyxl.styles import Font, Alignment, Border, Side, PatternFill
 from openpyxl.utils import get_column_letter
 from django.http import HttpResponse
 
+
+
+
+
+# from celery import Celery
+# from celery.schedules import crontab
+
+# app = Celery()
+
+# @app.on_after_configure.connect
+# def setup_periodic_tasks(sender, **kwargs):
+#     sender.add_periodic_tasks(30.0, test.s('world'), expires=10)
+#     sender.add_periodic_tasks(
+#         crontab(hour=7, minute=30, day_of_week=1),
+#         test.s('Happy Mondays!')
+#     )
+
+# @app.task
+# def test(arg):
+#     print(arg)
+
+import smtplib
+from django.core.mail import EmailMultiAlternatives
+
+@api_view(['GET'])
+def enviar_mail(request):
+    try: 
+        print("Preparando email")
+        subject = '[Cambio Origen] nombre apellido '
+        text_message =  "Ya está disponible tu reporte diario, visita ohl.faena.app para descargar,\n\nSaludos\nEquipo Faena"
+        html_message =  '<p>Ya está disponible tu reporte diario, visita <a href="ohl.faena.app">ohl.faena.app</a> para descargar </p> \
+                                                \
+                        Saludos, <br>           \
+                        Equipo Faena <br>           \
+                        <img src="https://ohl.faena.app/avalora.png" height=20% width=20% >         \
+                        '
+        
+        administrador = Administrador.objects.filter(is_superuser=True)
+        lista_correos = []
+        for admin in administrador:
+            lista_correos.append(admin.email)
+
+        message = EmailMultiAlternatives(subject,text_message,settings.EMAIL_HOST_USER,lista_correos)
+        message.attach_alternative(html_message,"text/html")
+        message.send()
+
+        resp={}
+        resp['message']= text_message
+        return Response(resp)
+    except Exception as e:
+        print('error: No se pudo enviar email')
+        raise e
 
 class CodigoQRCamion(APIView):
     permission_classes = (IsAuthenticated,)
@@ -401,279 +450,3 @@ def authenticate_user(request):
         res = {'request': False, 'error': 'por favor proporcione un email y una password'}
         return Response(res, status=status.HTTP_403_FORBIDDEN)
     
-
-
-
-# class Texto(APIView):
-#     def post(self,request):
-#         # serializer_context = {
-#         #     'request': request,
-#         # }
-#         if(request.data['proyect_id']>0):
-#             adminregister=Administrador.objects.all().filter(proyecto=request.data['proyect_id'])
-#             if(len(adminregister)>0):
-#                 serializer = AdministradorSerializer(adminregister, many=True)
-#                 return Response(serializer.data)
-#             else:
-#                 return Response("No existen administradores en este proyecto")
-#         else:
-#             return Response("Proyecto no existe")
-
-
-
-@api_view(['GET'])
-# @authentication_classes([])
-# @permission_classes([])
-def exportar_a_xlsx(request,start,end):
-
-    if (not Voucher.objects.filter(fecha__range=(start,end)).exists()):
-        print("\nno hay vouchers")
-        res={}
-        res = {'request': False, 'error': 'No existen registros para el rango especificado'}
-        return Response(res,status=status.HTTP_204_NO_CONTENT)
-
-    response = HttpResponse(
-        # content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        content_type='application/vnd.ms-excel',
-    )
-    response['Content-Disposition'] = 'attachment; filename={date}-reporte.xlsx'.format(
-        date=datetime.now().strftime('%Y-%m-%d'),
-    )
-
-    voucher_queryset = Voucher.objects.filter(fecha__range=(start,end))
-    print('voucher_queryset: ', voucher_queryset)
-
-    camion_queryset = Voucher.objects.filter(fecha__range=(start,end)) \
-        .values('nombre_subcontratista','patente_camion','marca_camion','modelo_camion',
-        'color_camion','capacidad_camion','unidad_medida','numero_ejes','nombre_conductor',
-        'apellido_conductor') \
-        .annotate(despachos_realizados=Count('patente_camion')) \
-        .order_by('-despachos_realizados')
-    print('camion_queryset: ', camion_queryset)
-    # camion_queryset = Camion.objects.all()
-
-    workbook = Workbook()
-    header_font = Font(name='Calibri', bold=True)
-    # Get active worksheet/tab
-    worksheet = workbook.active
-    worksheet.title = 'Registro de Salida'
-
-    print('Se ha creado la hoja de trabajo')
-    # Definir los titulos por columna
-    columns = [
-        ('Id',5),  #1
-        ('Despachador',12), #28 - falta apellido
-        ('RUT Despachador',13), #29
-        ('Telefono Despachador Asociado',14), #30
-        ('Proyecto',10), #2
-        ('Nro. impresiones',10), #3
-        ('Nombre cliente',12), #no va?
-        ('Rut cliente',12), #no va?
-        ('Nombre subcontratista',20), #14
-        ('Razón social subcontratista',20), #15
-        ('RUT subcontratista',20), #16
-        ('Contacto subcontratista',20), #17
-        ('Email subcontratista',20), #18
-        ('Teléfono subcontratista',20), #19
-        ('Nombre conductor',20), #27
-        ('Apellido conductor',20), #27
-        ('Fecha',11), #4
-        ('Hora',8), #5
-        ('Patente',8), #20
-        ('Marca',7), #21
-        ('Modelo',8), #22
-        ('Color',8), #23
-        ('Volumen',8), #24
-        ('Unidad de medida',8), #25
-        ('Nro ejes',8), #26
-        ('Foto patente',15), #32
-        ('Tipo material',13), #13
-        ('Punto origen',15), #6
-        ('Comuna origen',16), #7
-        ('Dirección origen',18), #8
-        ('Punto suborigen',15), #9
-        ('Punto destino',15), #10
-        ('Comuna destino',16), #11
-        ('Dirección destino',18), #12
-    ]
-    row_num = 1
-    # Asignar los titulos para cada celda de la cabecera
-    for col_num, (column_title, column_width) in enumerate(columns, 1):
-        cell = worksheet.cell(row=row_num, column=col_num)
-        cell.value = column_title
-        cell.font = header_font
-        # set column width
-        column_letter = get_column_letter(col_num)
-        column_dimensions = worksheet.column_dimensions[column_letter]
-        column_dimensions.width = column_width
-    print('Se han asignado los titulos para cada celda de la cabecera')
-    # Iterar por todos los vouchers filtrados por fecha
-    for voucher in voucher_queryset:
-        row_num += 1
-
-        # serializerOrigen=OrigenSerializer()
-        # if Origen.objects.filter(nombre_origen=voucher.nombre_origen).exists():
-        #     query_origen = Origen.objects.get(nombre_origen=voucher.nombre_origen)
-        #     serializerOrigen = OrigenSerializer(query_origen)
-        #     # print('Se serializa el origen')
-
-        # serializerDestino=DestinoSerializer()
-        # if Destino.objects.filter(nombre_destino=voucher.punto_destino).exists():
-        #     query_destino = Destino.objects.get(nombre_destino=voucher.punto_destino)
-        #     serializerDestino = DestinoSerializer(query_destino)
-        #     # print('Se serializa el destino')
-        
-        serializerSubcontratista=SubcontratistaSerializer()
-        if Subcontratista.objects.filter(rut=voucher.rut_subcontratista).exists():
-            query_subcontratista = Subcontratista.objects.get(rut=voucher.rut_subcontratista)
-            serializerSubcontratista = SubcontratistaSerializer(query_subcontratista)
-            # print('Se serializa el subcontratista')
-
-        serializerCamion=CamionSerializer()
-        if Camion.objects.filter(patente_camion=voucher.patente_camion).exists():
-            query_camion = Camion.objects.get(patente_camion=voucher.patente_camion)
-            serializerCamion = CamionSerializer(query_camion)
-            # print('Se serializa el Camion')
-
-        serializerDespachador=DespachadorSerializer()
-        if Despachador.objects.filter(pk=voucher.despachador).exists():
-            query_despachador = Despachador.objects.get(pk=voucher.despachador)
-            serializerDespachador = DespachadorSerializer(query_despachador)
-            # print('Se serializa el Despachador')
-
-        
-        
-        # administrador = Proyecto.objects.filter(nombre_origen=despachador.proyecto, is_superuser=True)
-        # Define the data for each cell in the row 
-        row = [
-            voucher.id, #1
-            str(voucher.despachador),#28 - falta apellido
-            serializerDespachador.data['rut'], #29
-            serializerDespachador.data['telefono'], #30
-            # voucher.proyecto,
-            str(Proyecto.objects.get(id=voucher.id_proyecto)),#2
-            voucher.contador_impresiones, #3
-            voucher.nombre_cliente, #no va?
-            voucher.rut_cliente, #no va?
-            voucher.nombre_subcontratista, #14
-            serializerSubcontratista.data['razon_social'], #15
-            voucher.rut_subcontratista, #16
-            serializerSubcontratista.data['nombre_contacto']+' '+serializerSubcontratista.data['apellido_contacto'], #17
-            serializerSubcontratista.data['email_contacto'], #18
-            serializerSubcontratista.data['telefono_contacto'], #19
-            voucher.nombre_conductor, #27
-            voucher.apellido_conductor, #27
-            voucher.fecha, #4
-            voucher.hora, #5
-            voucher.patente_camion, #20
-            voucher.marca_camion, #21
-            voucher.modelo_camion, #22
-            voucher.color_camion, #23
-            voucher.capacidad_camion, #24
-            voucher.unidad_medida, #25
-            voucher.numero_ejes, #26
-            'https://ohl.faena.app/mediafiles/'+str(voucher.foto_patente), #32
-            voucher.tipo_material, #13
-            voucher.nombre_origen, #6
-            voucher.comuna_origen, #7
-            voucher.calle_origen+' '+str(voucher.numero_origen), #8
-            voucher.nombre_suborigen, #9
-            voucher.nombre_destino, #10
-            voucher.comuna_destino, #11
-            voucher.calle_destino+' '+str(voucher.numero_destino), #12
-        ]
-        # print('Se define la data para cada fila')
-        # Asignacion de la data para cada celda de la fila
-        for col_num, cell_value in enumerate(row, 1):
-            cell = worksheet.cell(row=row_num, column=col_num)
-            cell.value = cell_value
-        # print('Se asigna la data para cada celda de la fila')
-
-
-    ### Nueva hoja de trabajo ###
-    # despachoscamion_queryset = Voucher.objects.filter(fecha__range=(start,end)) \
-    #     .values('patente') \
-    #     .annotate(despachos_realizados=Count('patente')) \
-    #     .order_by('-despachos_realizados')
-    # print('serializerV: ', despachoscamion_queryset)
-    worksheet = workbook.create_sheet(
-        title='Flota Activa',
-        index=2,
-    )
-    print('01')
-    # Definir los titulos por columna
-    columns = [
-        ('Subcontratista',25),
-        ('Patente',10),
-        ('Marca',10),
-        ('Modelo',10),
-
-        ('Color',8),
-        ('Capacidad',9),
-        ('Unidad',7),
-        ('Numero ejes',11),
-
-        ('Nombre conductor ppal',21),
-        ('Apellido conductor ppal',21),
-        
-        ('Despachos realizados',19), #8
-        ('Volumen total desplazado',20), #9
-    ]
-    print('02')
-    row_num = 1
-    # Asignar los titulos para cada celda de la cabecera
-    for col_num, (column_title, column_width) in enumerate(columns, 1):
-        cell = worksheet.cell(row=row_num, column=col_num)
-        cell.value = column_title
-        cell.font = header_font
-        # set column width
-        column_letter = get_column_letter(col_num)
-        column_dimensions = worksheet.column_dimensions[column_letter]
-        column_dimensions.width = column_width
-
-    # Iterar por info de camiones existente en
-    for camion_activo in camion_queryset:
-        print('camion_activo: ',camion_activo)
-        # camion = Camion.objects.get(patente_camion=camion_activo['patente_camion'])
-        row_num += 1
-        # Define the data for each cell in the row 
-        row = [
-            camion_activo['nombre_subcontratista'], #1
-            camion_activo['patente_camion'], #2
-            camion_activo['marca_camion'], #3
-            camion_activo['modelo_camion'], #4
-
-            camion_activo['color_camion'], #4
-            camion_activo['capacidad_camion'], #5
-            camion_activo['unidad_medida'], #6
-            camion_activo['numero_ejes'], #7
-
-            camion_activo['nombre_conductor'], #?
-            camion_activo['apellido_conductor'], #?
-            camion_activo['despachos_realizados'], #8
-            int(camion_activo['despachos_realizados']) * int(camion_activo['capacidad_camion']), #9
-        ]
-        # row = [
-        #     camion_activo.nombre_subcontratista, #1
-        #     camion_activo.patente_camion, #2
-        #     camion_activo.marca_camion, #3
-        #     camion_activo.modelo_camion, #4
-
-        #     camion_activo.color_camion, #4
-        #     camion_activo.capacidad_camion, #5
-        #     camion_activo.unidad_medida, #6
-        #     camion_activo.numero_ejes, #7
-
-        #     camion_activo.nombre_conductor, #?
-        #     camion_activo.apellido_conductor, #?
-        #     camion_activo.despachos_realizados, #8
-        #     int(camion_activo.despachos_realizados) * int(camion_activo.capacidad_camion), #9
-        # ]
-
-        # Assign the data for each cell of the row 
-        for col_num, cell_value in enumerate(row, 1):
-            cell = worksheet.cell(row=row_num, column=col_num)
-            cell.value = cell_value
-            
-    workbook.save(response)
-    return response

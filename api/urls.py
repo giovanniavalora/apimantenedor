@@ -2,6 +2,7 @@ from django.urls import path, include
 from rest_framework import routers
 from . import views
 from api.views import *
+from api.view_reporte import *
 
 
 # app_name = "api"
@@ -45,7 +46,8 @@ urlpatterns = [
     path('Despachador/<int:pk>/', DespachadorDetail.as_view()),
     
     path('Reporte/<slug:start>/<slug:end>/', exportar_a_xlsx),
-
+    path('Reporte/<slug:start>/<slug:hhi>/<slug:mmi>/<slug:ssi>/<slug:end>/<slug:hhf>/<slug:mmf>/<slug:ssf>/', exportar_reporte),
+    path('enviarmail/', enviar_mail),
     
 
     
