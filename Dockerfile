@@ -16,6 +16,9 @@ RUN echo "America/Santiago" > /etc/timezone
 
 # install psycopg2 dependencies
 RUN apk update && apk add postgresql-dev gcc python3-dev musl-dev
+RUN apk add libffi-dev
+# Por si no es suficiente libffi para azure-storage-blob, instalar:
+# RUN apk add --no-cache --virtual .pynacl_deps build-base python3-dev libffi-dev openssl-dev
 
 # install dependencies
 RUN python3 -m pip install --upgrade pip

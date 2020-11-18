@@ -97,7 +97,7 @@ class Conductor(models.Model):
     camion = models.ManyToManyField(Camion, blank=True)
     nombre = models.CharField(max_length = 30)
     apellido = models.CharField(max_length = 30)
-    rut = models.CharField(max_length = 20)
+    rut = models.CharField(max_length = 20, blank=True)
     telefono = models.CharField(max_length=30, blank=True)
     email = models.CharField(max_length = 100, blank=True, default='')
     available = models.BooleanField(default=True)

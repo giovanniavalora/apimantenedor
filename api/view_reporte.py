@@ -49,7 +49,7 @@ def exportar_a_xlsx(request,start,end):
     )
 
     voucher_queryset = Voucher.objects.filter(fecha__range=(start,end))
-    print('voucher_queryset: ', voucher_queryset)
+    # print('voucher_queryset: ', voucher_queryset)
 
     
     # camiones_norm = Voucher.objects.annotate(as_integer=Cast('capacidad_camion',IntegerField()))
@@ -106,7 +106,7 @@ def exportar_a_xlsx(request,start,end):
         ('Volumen',8), #24
         ('Unidad de medida',8), #25
         ('Nro ejes',8), #26
-        ('Foto patente',15), #32
+        ('Foto patente',16), #32
         ('Tipo material',13), #13
         ('Punto origen',15), #6
         ('Comuna origen',16), #7
@@ -126,7 +126,7 @@ def exportar_a_xlsx(request,start,end):
         column_letter = get_column_letter(col_num)
         column_dimensions = worksheet.column_dimensions[column_letter]
         column_dimensions.width = column_width
-    print('Se han asignado los titulos para cada celda de la cabecera')
+    # print('Se han asignado los titulos para cada celda de la cabecera')
     # Iterar por todos los vouchers filtrados por fecha
     for voucher in voucher_queryset:
         row_num += 1
@@ -179,7 +179,7 @@ def exportar_a_xlsx(request,start,end):
             voucher.capacidad_camion, #24
             voucher.unidad_medida, #25
             voucher.numero_ejes, #26
-            'https://ohl.faena.app/mediafiles/'+str(voucher.foto_patente), #32
+            'https://'+settings.AZURE_CUSTOM_DOMAIN+'/'+settings.MEDIA_LOCATION+'/'+str(voucher.foto_patente), #32
             voucher.tipo_material, #13
             voucher.nombre_origen, #6
             voucher.comuna_origen, #7
@@ -192,8 +192,16 @@ def exportar_a_xlsx(request,start,end):
         # print('Se define la data para cada fila')
         # Asignacion de la data para cada celda de la fila
         for col_num, cell_value in enumerate(row, 1):
-            cell = worksheet.cell(row=row_num, column=col_num)
-            cell.value = cell_value
+            if(col_num==27):
+                cell = worksheet.cell(row=row_num, column=col_num)
+                cell.hyperlink = cell_value
+                cell.style = "Hyperlink"
+                cell.value = cell_value
+            else:
+                cell = worksheet.cell(row=row_num, column=col_num)
+                cell.value = cell_value
+            
+            
         # print('Se asigna la data para cada celda de la fila')
 
 
@@ -202,7 +210,7 @@ def exportar_a_xlsx(request,start,end):
         title='Flota Activa',
         index=2,
     )
-    print('01')
+    # print('01')
     # Definir los titulos por columna
     columns = [
         ('Activo',15),
@@ -218,7 +226,7 @@ def exportar_a_xlsx(request,start,end):
         ('Despachos realizados',19), #8
         ('Volumen total desplazado',25), #9
     ]
-    print('02')
+    # print('02')
     row_num = 1
     # Asignar los titulos para cada celda de la cabecera
     for col_num, (column_title, column_width) in enumerate(columns, 1):
@@ -232,7 +240,7 @@ def exportar_a_xlsx(request,start,end):
 
     # Iterar por info de camiones existente en
     for camion_activo in Voucher.objects.raw('SELECT 1 as id, available, nombre_subcontratista, patente_camion, marca_camion, modelo_camion, color_camion, unidad_medida, numero_ejes, count(patente_camion) as despachos,sum(CAST(capacidad_camion as INT)) as volumen_total_desplazado FROM public.api_voucher WHERE available is True GROUP BY available, nombre_subcontratista, patente_camion, marca_camion, modelo_camion, color_camion, unidad_medida, numero_ejes'):
-        print('camion_activo: ',camion_activo)
+        # print('camion_activo: ',camion_activo)
         # camion = Camion.objects.get(patente_camion=camion_activo['patente_camion'])
         row_num += 1
         # Define the data for each cell in the row 
@@ -314,20 +322,20 @@ def exportar_reporte(request,start,hhi,mmi,ssi,end,hhf,mmf,ssf):
     # print('voucher_queryset t: ', voucher_queryset)
 
     voucher_inicio = Voucher.objects.filter(fecha=start).filter(hora__range=(horai,'23:59:59')).filter(available=True)
-    print('voucher_queryset i: ', voucher_inicio)
+    # print('voucher_queryset i: ', voucher_inicio)
     voucher_final = Voucher.objects.filter(fecha=end).filter(hora__range=('00:00:00',horaf)).filter(available=True)
-    print('voucher_queryset f: ', voucher_final)
+    # print('voucher_queryset f: ', voucher_final)
     
     voucher_queryset = voucher_inicio | voucher_final
-    print('voucher_queryset R: ', voucher_queryset)
+    # print('voucher_queryset R: ', voucher_queryset)
 
     hoja2_inicio = Voucher.objects.filter(fecha=start).filter(hora__range=(horai,'23:59:59')).filter(available=False)
-    print('hoja i: ', voucher_inicio)
+    # print('hoja i: ', voucher_inicio)
     hoja2_final = Voucher.objects.filter(fecha=end).filter(hora__range=('00:00:00',horaf)).filter(available=False)
-    print('hoja f: ', voucher_final)
+    # print('hoja f: ', voucher_final)
     
     hoja2_queryset = hoja2_inicio | hoja2_final
-    print('hoja R: ', voucher_queryset)
+    # print('hoja R: ', voucher_queryset)
 
 
     workbook = Workbook()
@@ -336,7 +344,7 @@ def exportar_reporte(request,start,hhi,mmi,ssi,end,hhf,mmf,ssf):
     worksheet = workbook.active
     worksheet.title = 'Registro de Salida'
 
-    print('Se ha creado la hoja de trabajo')
+    # print('Se ha creado la hoja de trabajo')
     # Definir los titulos por columna
     columns = [
         ('Id',5),  #1
@@ -385,7 +393,7 @@ def exportar_reporte(request,start,hhi,mmi,ssi,end,hhf,mmf,ssf):
         column_letter = get_column_letter(col_num)
         column_dimensions = worksheet.column_dimensions[column_letter]
         column_dimensions.width = column_width
-    print('Se han asignado los titulos para cada celda de la cabecera')
+    # print('Se han asignado los titulos para cada celda de la cabecera')
     # Iterar por todos los vouchers filtrados por fecha
     for voucher in voucher_queryset:
         row_num += 1
@@ -447,7 +455,7 @@ def exportar_reporte(request,start,hhi,mmi,ssi,end,hhf,mmf,ssf):
         title='Tickets Corregidos',
         index=2,
     )
-    print('01')
+    # print('01')
     # Definir los titulos por columna
     columns = [
         ('Id',5),  #1
@@ -486,7 +494,7 @@ def exportar_reporte(request,start,hhi,mmi,ssi,end,hhf,mmf,ssf):
         ('Comuna destino',16), #11
         ('Dirección destino',18), #12
     ]
-    print('02')
+    # print('02')
     row_num = 1
     # Asignar los titulos para cada celda de la cabecera
     for col_num, (column_title, column_width) in enumerate(columns, 1):
